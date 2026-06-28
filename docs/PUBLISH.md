@@ -49,13 +49,19 @@ pi install https://github.com/USER/pi-hud-footer@v0.1.0
 .github/workflows/publish.yml
 ```
 
-需要先在 GitHub 仓库设置中添加 secret：
+本项目使用 npm **Trusted Publishing**，不需要配置 `NPM_TOKEN`。
+
+需要先在 npm 包的发布设置中添加 Trusted Publisher：
 
 ```txt
-NPM_TOKEN
+Publisher: GitHub Actions
+Repository owner: liao666brant
+Repository name: pi-hud-footer
+Workflow filename: publish.yml
+Environment: 留空
 ```
 
-建议在 npm 账号中创建 **Automation** 类型 token，这样开启 2FA 时也可以由 CI 发布。
+该方式通过 GitHub Actions OIDC 身份发布，适合开启 2FA 的 npm 账号。
 
 发布流程：
 

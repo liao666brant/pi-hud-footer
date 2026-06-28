@@ -49,6 +49,6 @@ jobs:
           fi
 
       - name: Publish
+        # Uses npm Trusted Publishing (OIDC). Configure this workflow as a
+        # trusted publisher in npm package settings; no NPM_TOKEN is required.
         run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
