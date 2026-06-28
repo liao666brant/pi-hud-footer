@@ -32,7 +32,7 @@ pi install /path/to/pi-hud-footer
 从 GitHub 安装：
 
 ```bash
-pi install git:github.com:USER/pi-hud-footer@v0.1.0
+pi install git:github.com:USER/pi-hud-footer@v0.2.0
 ```
 
 如果发布到了 npm，也可以：
