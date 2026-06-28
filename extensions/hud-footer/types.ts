@@ -3,9 +3,12 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 export type ToolStats = Map<string, { ok: number; error: number }>;
 
 export type ColorName = Parameters<ExtensionContext["ui"]["theme"]["fg"]>[0];
+export type HudLanguage = "en" | "zh";
+export type HudLanguageSetting = HudLanguage | "auto";
 
 export interface HudConfig {
 	enabled: boolean;
+	language: HudLanguageSetting;
 	barWidth: number;
 	showTools: boolean;
 	maxTools: number;

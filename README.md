@@ -1,5 +1,7 @@
 # pi-hud-footer
 
+[English](README.en.md) | 简体中文
+
 一个给 [pi coding agent](https://github.com/earendil-works/pi) 使用的 Claude HUD 风格自定义 footer/statusline 插件。
 
 它会替换 pi 默认 footer，显示一个紧凑的多行 HUD，方便查看模型、上下文、词元、缓存率、费用和工具调用统计。
@@ -16,6 +18,7 @@
 - 显示费用估算
 - 显示工具调用统计
 - 每轮对话结束后显示本轮用时
+- 支持中文/英文界面，默认根据系统语言自动选择，其他语言或无效配置回退英文
 - 支持全局/项目级 JSON 配置
 
 ## 安装
@@ -74,7 +77,7 @@ pi -e .
 
 ## 配置
 
-详见：[docs/CONFIG.md](docs/CONFIG.md)
+详见：[docs/CONFIG.md](docs/CONFIG.md) / [English](docs/CONFIG.en.md)
 
 示例配置：[examples/hud-footer.json](examples/hud-footer.json)
 
@@ -102,7 +105,7 @@ cacheRead / (input + cacheRead + cacheWrite)
 
 ## 发布给其他人
 
-详见：[docs/PUBLISH.md](docs/PUBLISH.md)
+详见：[docs/PUBLISH.md](docs/PUBLISH.md) / [English](docs/PUBLISH.en.md)
 
 ## 安全说明
 

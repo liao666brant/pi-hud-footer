@@ -1,5 +1,7 @@
 # 发布指南
 
+[English](PUBLISH.en.md) | 简体中文
+
 本文档记录如何把 `pi-hud-footer` 发布给其他 pi 用户使用。
 
 ## 本地检查

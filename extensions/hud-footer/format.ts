@@ -1,4 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { HudLanguage } from "./types.ts";
 
 export function fmtTokens(value: number): string {
 	if (!Number.isFinite(value) || value <= 0) return "0";
@@ -12,24 +13,39 @@ export function fmtPercent(value: number): string {
 	return `${Math.round(value * 100)}%`;
 }
 
-export function fmtDuration(ms: number): string {
-	if (!Number.isFinite(ms) || ms < 0) return "0m";
+export function fmtDuration(ms: number, language: HudLanguage = "en"): string {
+	if (!Number.isFinite(ms) || ms < 0) {
+		return language === "zh" ? "0分" : "0m";
+	}
+
 	const totalMinutes = Math.max(0, Math.floor(ms / 60_000));
 	const hours = Math.floor(totalMinutes / 60);
 	const minutes = totalMinutes % 60;
-	return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+
+	if (language === "zh") {
+		if (hours > 0) return `${hours}小时 ${minutes}分`;
+		return `${minutes}分`;
+	}
+
+	if (hours > 0) return `${hours}h ${minutes}m`;
+	return `${minutes}m`;
 }
 
-export function fmtTurnDuration(ms: number): string {
-	if (!Number.isFinite(ms) || ms < 0) return "0秒";
-	if (ms < 1000) return "<1秒";
+export function fmtTurnDuration(ms: number, language: HudLanguage = "en"): string {
+	if (!Number.isFinite(ms) || ms < 0) return language === "zh" ? "0秒" : "0s";
+	if (ms < 1000) return language === "zh" ? "<1秒" : "<1s";
 	const totalSeconds = Math.round(ms / 1000);
 	const hours = Math.floor(totalSeconds / 3600);
 	const minutes = Math.floor((totalSeconds % 3600) / 60);
 	const seconds = totalSeconds % 60;
-	if (hours > 0) return `${hours}小时${minutes}分${seconds}秒`;
-	if (minutes > 0) return `${minutes}分${seconds}秒`;
-	return `${seconds}秒`;
+	if (language === "zh") {
+		if (hours > 0) return `${hours}小时${minutes}分${seconds}秒`;
+		if (minutes > 0) return `${minutes}分${seconds}秒`;
+		return `${seconds}秒`;
+	}
+	if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+	if (minutes > 0) return `${minutes}m ${seconds}s`;
+	return `${seconds}s`;
 }
 
 export function shortModel(ctx: ExtensionContext): string {

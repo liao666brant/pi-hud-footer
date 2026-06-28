@@ -1,5 +1,6 @@
 {
   "enabled": true,
+  "language": "auto",
   "barWidth": 18,
   "showTools": true,
   "maxTools": 7,
