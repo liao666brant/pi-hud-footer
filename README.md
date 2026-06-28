@@ -2,20 +2,20 @@
 
 一个给 [pi coding agent](https://github.com/earendil-works/pi) 使用的 Claude HUD 风格自定义 footer/statusline 插件。
 
-它会替换 pi 默认 footer，显示一个紧凑的多行 HUD，方便查看模型、上下文、token、缓存率、费用和工具调用统计。
+它会替换 pi 默认 footer，显示一个紧凑的多行 HUD，方便查看模型、上下文、词元、缓存率、费用和工具调用统计。
 
 ## 功能
 
-- 显示当前模型和上下文窗口大小
+- 显示当前模型和思考等级
 - 显示上下文使用进度条
 - 显示当前项目名和 git 分支
 - 显示 running / ready 状态
-- 显示会话轮次
-- 显示 token 使用摘要
-- 显示缓存读写 token
-- 显示 token 缓存命中率
+- 显示词元使用摘要
+- 显示缓存读写词元
+- 显示词元缓存命中率
 - 显示费用估算
 - 显示工具调用统计
+- 每轮对话结束后显示本轮用时
 - 支持全局/项目级 JSON 配置
 
 ## 安装
@@ -98,7 +98,7 @@ pi -e .
 cacheRead / (input + cacheRead + cacheWrite)
 ```
 
-即：缓存命中的输入 token / 输入侧总 token。
+即：缓存命中的输入词元 / 输入侧总词元。
 
 ## 发布给其他人
 

@@ -5,5 +5,6 @@
   "maxTools": 7,
   "showCost": true,
   "showElapsed": true,
-  "showCacheRate": true
+  "showCacheRate": true,
+  "showTurnDuration": true
 }

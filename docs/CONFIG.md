@@ -40,7 +40,8 @@
   "maxTools": 7,
   "showCost": true,
   "showElapsed": true,
-  "showCacheRate": true
+  "showCacheRate": true,
+  "showTurnDuration": true
 }
 ```
 
@@ -53,8 +54,9 @@
 | `showTools` | boolean | `true` | 是否显示工具调用统计行。 |
 | `maxTools` | number | `7` | 工具统计行最多显示多少个工具，会限制在 `1..20`。 |
 | `showCost` | boolean | `true` | 是否显示费用估算。 |
-| `showElapsed` | boolean | `true` | 是否显示会话已用时间。 |
-| `showCacheRate` | boolean | `true` | 是否显示 token 缓存命中率。 |
+| `showElapsed` | boolean | `true` | 是否在 footer 显示会话已用时间。 |
+| `showCacheRate` | boolean | `true` | 是否显示词元缓存命中率。 |
+| `showTurnDuration` | boolean | `true` | 是否在每轮对话结束后显示本轮用时通知。 |
 
 ## 缓存率计算方式
 
@@ -62,4 +64,4 @@
 cacheRead / (input + cacheRead + cacheWrite)
 ```
 
-含义是：缓存命中的输入 token / 输入侧总 token。
+含义是：缓存命中的输入词元 / 输入侧总词元。
