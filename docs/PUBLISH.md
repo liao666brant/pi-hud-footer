@@ -43,10 +43,44 @@ pi install https://github.com/USER/pi-hud-footer@v0.1.0
 
 ## npm 发布
 
-确认包名可用后执行：
+本项目已配置 GitHub Actions 自动发布：
+
+```txt
+.github/workflows/publish.yml
+```
+
+需要先在 GitHub 仓库设置中添加 secret：
+
+```txt
+NPM_TOKEN
+```
+
+建议在 npm 账号中创建 **Automation** 类型 token，这样开启 2FA 时也可以由 CI 发布。
+
+发布流程：
 
 ```bash
-npm publish
+pnpm version patch
+# 或手动更新 package.json version
+
+git push origin main
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+当推送 `v*.*.*` tag 时，Action 会执行：
+
+1. `pnpm install --frozen-lockfile`
+2. `pnpm typecheck`
+3. 校验 tag 版本和 `package.json` version 一致
+4. `npm publish --access public --provenance`
+
+也可以在 GitHub Actions 页面手动运行 `Publish to npm` workflow。
+
+如需本地手动发布，确认包名可用后执行：
+
+```bash
+npm publish --access public
 ```
 
 其他用户可以通过以下方式安装：
