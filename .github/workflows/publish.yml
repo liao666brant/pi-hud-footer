@@ -13,7 +13,6 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: public
 
     steps:
       - name: Checkout
@@ -32,6 +31,9 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: pnpm
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -49,7 +51,7 @@ jobs:
             exit 1
           fi
 
-      - name: Publish
-        # Uses npm Trusted Publishing (OIDC). Configure this workflow as a
-        # trusted publisher in npm package settings; no NPM_TOKEN is required.
-        run: npm publish --access public --provenance
+      - name: Stage publish
+        # Uses npm Trusted Publishing (OIDC) with the `npm stage publish` action.
+        # A maintainer must approve the staged package before it goes live.
+        run: npm stage publish --access public --provenance
