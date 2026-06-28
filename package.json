@@ -24,6 +24,7 @@
     "docs",
     "examples",
     "README.md",
+    "README.en.md",
     "LICENSE"
   ],
   "pi": {

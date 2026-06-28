@@ -2,10 +2,12 @@ import { CONFIG_DIR_NAME, type ExtensionContext } from "@earendil-works/pi-codin
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { normalizeLanguageSetting } from "./i18n.ts";
 import type { HudConfig } from "./types.ts";
 
 export const DEFAULT_CONFIG: HudConfig = {
 	enabled: true,
+	language: "auto",
 	barWidth: 18,
 	showTools: true,
 	maxTools: 7,
@@ -24,10 +26,16 @@ function clampInt(value: unknown, fallback: number, min: number, max: number): n
 	return Math.max(min, Math.min(max, Math.round(value)));
 }
 
+function mergeLanguage(base: HudConfig, patch: Record<string, unknown>): HudConfig["language"] {
+	if (!Object.hasOwn(patch, "language")) return base.language;
+	return normalizeLanguageSetting(patch.language) ?? "en";
+}
+
 function mergeConfig(base: HudConfig, patch: unknown): HudConfig {
 	if (!isObject(patch)) return base;
 	return {
 		enabled: typeof patch.enabled === "boolean" ? patch.enabled : base.enabled,
+		language: mergeLanguage(base, patch),
 		barWidth: clampInt(patch.barWidth, base.barWidth, 6, 40),
 		showTools: typeof patch.showTools === "boolean" ? patch.showTools : base.showTools,
 		maxTools: clampInt(patch.maxTools, base.maxTools, 1, 20),

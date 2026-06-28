@@ -1,6 +1,7 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { DEFAULT_CONFIG, loadConfig } from "./hud-footer/config.ts";
 import { fmtTurnDuration } from "./hud-footer/format.ts";
+import { getI18n } from "./hud-footer/i18n.ts";
 import { createHudFooter } from "./hud-footer/render.ts";
 import type { HudConfig } from "./hud-footer/types.ts";
 
@@ -11,6 +12,11 @@ export default function (pi: ExtensionAPI) {
 	let lastTurnDuration: number | undefined;
 	let runningTimer: ReturnType<typeof setInterval> | undefined;
 	let config: HudConfig = { ...DEFAULT_CONFIG };
+	const commandI18n = getI18n(DEFAULT_CONFIG.language);
+
+	function currentI18n() {
+		return getI18n(config.language);
+	}
 
 	function isEnabled(): boolean {
 		return runtimeEnabled ?? config.enabled;
@@ -18,7 +24,9 @@ export default function (pi: ExtensionAPI) {
 
 	function updateRunningMessage(ctx: ExtensionContext) {
 		if (agentStartedAt === undefined) return;
-		ctx.ui.setWorkingMessage(`运行中 · 本轮用时 ${fmtTurnDuration(Date.now() - agentStartedAt)}`);
+		const i18n = currentI18n();
+		const elapsed = fmtTurnDuration(Date.now() - agentStartedAt, i18n.language);
+		ctx.ui.setWorkingMessage(i18n.workingMessage(elapsed));
 	}
 
 	function stopRunningTimer(ctx?: ExtensionContext) {
@@ -64,7 +72,9 @@ export default function (pi: ExtensionAPI) {
 		agentStartedAt = undefined;
 		stopRunningTimer(ctx);
 		if (config.showTurnDuration && elapsed !== undefined && ctx.hasUI) {
-			ctx.ui.notify(`本轮用时 ${fmtTurnDuration(elapsed)}`, "info");
+			const i18n = currentI18n();
+			const turnDuration = fmtTurnDuration(elapsed, i18n.language);
+			ctx.ui.notify(i18n.turnDurationNotification(turnDuration), "info");
 		}
 	});
 
@@ -73,24 +83,25 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("hud-footer", {
-		description: "Toggle claude-hud style custom footer.",
+		description: commandI18n.commands.toggleDescription,
 		handler: async (_args, ctx) => {
 			runtimeEnabled = !isEnabled();
 			if (runtimeEnabled) {
 				installFooter(ctx);
-				ctx.ui.notify("HUD footer enabled", "info");
-			} else {
-				ctx.ui.setFooter(undefined);
-				ctx.ui.notify("HUD footer disabled", "info");
+				ctx.ui.notify(currentI18n().footerEnabled, "info");
+				return;
 			}
+
+			ctx.ui.setFooter(undefined);
+			ctx.ui.notify(currentI18n().footerDisabled, "info");
 		},
 	});
 
 	pi.registerCommand("hud-footer-reload", {
-		description: "Reload pi-hud-footer config.",
+		description: commandI18n.commands.reloadDescription,
 		handler: async (_args, ctx) => {
 			installFooter(ctx);
-			ctx.ui.notify("HUD footer config reloaded", "info");
+			ctx.ui.notify(currentI18n().configReloaded, "info");
 		},
 	});
 }

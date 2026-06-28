@@ -2,6 +2,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { basename } from "node:path";
 import { fmtDuration, fmtPercent, fmtTokens, fmtTurnDuration, shortModel } from "./format.ts";
+import { getI18n } from "./i18n.ts";
 import { collectStats, TOOL_ORDER } from "./stats.ts";
 import type { ColorName, HudConfig, HudStats } from "./types.ts";
 
@@ -64,6 +65,9 @@ export function createHudFooter(
 	isRunning: () => boolean,
 	getLastTurnDuration: () => number | undefined,
 ): FooterFactory {
+	const i18n = getI18n(config.language);
+	const { language } = i18n;
+
 	return (tui, theme, footerData) => {
 		const disposeBranch = footerData.onBranchChange(() => tui.requestRender());
 
@@ -80,13 +84,23 @@ export function createHudFooter(
 				const inputTotal = stats.input + stats.cacheRead + stats.cacheWrite;
 				const cacheRate = inputTotal > 0 ? stats.cacheRead / inputTotal : 0;
 				const totalTokens = inputTotal + stats.output;
-				const elapsed = stats.startedAt ? fmtDuration(Date.now() - stats.startedAt) : "0m";
+				const elapsed = stats.startedAt
+					? fmtDuration(Date.now() - stats.startedAt, language)
+					: fmtDuration(0, language);
+				const tokenBreakdown = i18n.labels.tokenBreakdown(
+					fmtTokens(stats.input),
+					fmtTokens(stats.output),
+					fmtTokens(stats.cacheRead),
+					fmtTokens(stats.cacheWrite),
+				);
 
 				const pctColor = contextUsageColor(contextRatio);
 				const cacheColor = cacheRateColor(cacheRate);
 				const lastTurnDuration = getLastTurnDuration();
-				const readyText = lastTurnDuration === undefined ? "✓ ready" : `✓ ready · ${fmtTurnDuration(lastTurnDuration)}`;
-				const state = isRunning() ? theme.fg("accent", "● running") : theme.fg("success", readyText);
+				const readyText = lastTurnDuration === undefined
+					? i18n.labels.ready
+					: `${i18n.labels.ready} · ${fmtTurnDuration(lastTurnDuration, language)}`;
+				const state = isRunning() ? theme.fg("accent", i18n.labels.running) : theme.fg("success", readyText);
 				const project = basename(ctx.cwd);
 
 				const topLeft = theme.fg("accent", `[${shortModel(ctx)} (${pi.getThinkingLevel()})]`);
@@ -107,25 +121,26 @@ export function createHudFooter(
 				const line2 = truncateToWidth(
 					joinParts([
 						" ",
-						theme.fg("muted", "词元:"),
+						theme.fg("muted", i18n.labels.tokens),
 						theme.fg("text", fmtTokens(totalTokens)),
-						theme.fg(
-							"dim",
-							`(输入 ${fmtTokens(stats.input)} / 输出 ${fmtTokens(stats.output)} / 缓存 R${fmtTokens(stats.cacheRead)} W${fmtTokens(stats.cacheWrite)})`,
-						),
+						theme.fg("dim", tokenBreakdown),
 						config.showCacheRate ? theme.fg("dim", "|") : undefined,
-						config.showCacheRate ? theme.fg(cacheColor, `缓存率 ${fmtPercent(cacheRate)}`) : undefined,
+						config.showCacheRate
+							? theme.fg(cacheColor, `${i18n.labels.cacheRate} ${fmtPercent(cacheRate)}`)
+							: undefined,
 						config.showElapsed ? theme.fg("dim", "|") : undefined,
-						config.showElapsed ? theme.fg("muted", `耗时 ${elapsed}`) : undefined,
+						config.showElapsed ? theme.fg("muted", `${i18n.labels.elapsed} ${elapsed}`) : undefined,
 						config.showCost ? theme.fg("dim", "|") : undefined,
-						config.showCost ? theme.fg("muted", `费用 $${stats.cost.toFixed(2)}`) : undefined,
+						config.showCost ? theme.fg("muted", `${i18n.labels.cost} $${stats.cost.toFixed(2)}`) : undefined,
 					]),
 					width,
 				);
 
 				const lines = [line1, line2];
-				const tools = config.showTools ? toolLine(stats, theme, width, config) : undefined;
-				if (tools && width >= 60) lines.push(tools);
+				if (config.showTools && width >= 60) {
+					const tools = toolLine(stats, theme, width, config);
+					if (tools) lines.push(tools);
+				}
 
 				return lines.map((line) => {
 					if (visibleWidth(line) <= width) return line;
