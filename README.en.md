@@ -16,8 +16,9 @@ It replaces pi's default footer with a compact multi-line HUD for quickly checki
 - Shows cache read/write tokens
 - Shows token cache hit rate
 - Shows estimated cost
-- Shows tool call statistics
+- Shows tool call statistics while keeping footer height stable
 - Shows turn duration after each assistant turn
+- Supports two HUD styles: classic footer style and editor-border style
 - Supports Chinese and English UI text; defaults to the system language and falls back to English for unsupported or invalid language settings
 - Supports global and project-level JSON configuration
 
@@ -74,6 +75,12 @@ Toggle the HUD footer on or off for the current session.
 ```
 
 Reload the configuration and refresh the HUD footer.
+
+```text
+/hud-footer-theme
+```
+
+Open a TUI selector and temporarily switch the HUD style.
 
 ## Configuration
 

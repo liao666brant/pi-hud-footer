@@ -1,17 +1,29 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { DEFAULT_CONFIG, loadConfig } from "./hud-footer/config.ts";
+import { DEFAULT_CONFIG, loadConfig, normalizeStyle } from "./hud-footer/config.ts";
+import { createHudEditorFactory } from "./hud-footer/editor.ts";
 import { fmtTurnDuration } from "./hud-footer/format.ts";
 import { getI18n } from "./hud-footer/i18n.ts";
-import { createHudFooter } from "./hud-footer/render.ts";
-import type { HudConfig } from "./hud-footer/types.ts";
+import { createHudFooter, type HudEditorState } from "./hud-footer/render.ts";
+import type { HudConfig, HudStyle } from "./hud-footer/types.ts";
+
+const ACTIVE_EXTENSION_KEY = Symbol.for("pi-hud-footer.active");
+type HudGlobal = typeof globalThis & { [ACTIVE_EXTENSION_KEY]?: boolean };
 
 export default function (pi: ExtensionAPI) {
+	const hudGlobal = globalThis as HudGlobal;
+	if (hudGlobal[ACTIVE_EXTENSION_KEY]) return;
+	hudGlobal[ACTIVE_EXTENSION_KEY] = true;
+
 	let runtimeEnabled: boolean | undefined;
 	let running = false;
 	let agentStartedAt: number | undefined;
 	let lastTurnDuration: number | undefined;
 	let runningTimer: ReturnType<typeof setInterval> | undefined;
 	let config: HudConfig = { ...DEFAULT_CONFIG };
+	let runtimeStyle: HudStyle | undefined;
+	let editorInstalled = false;
+	let previousEditorFactory: ReturnType<ExtensionContext["ui"]["getEditorComponent"]> | undefined;
+	const editorState: HudEditorState = {};
 	const commandI18n = getI18n(DEFAULT_CONFIG.language);
 
 	function currentI18n() {
@@ -44,19 +56,66 @@ export default function (pi: ExtensionAPI) {
 		runningTimer = setInterval(() => updateRunningMessage(ctx), 1000);
 	}
 
-	function installFooter(ctx: ExtensionContext) {
+	function installEditor(ctx: ExtensionContext) {
+		if (ctx.mode !== "tui") return;
+		if (!editorInstalled) previousEditorFactory = ctx.ui.getEditorComponent();
+		ctx.ui.setEditorComponent(
+			createHudEditorFactory(pi, ctx, config, () => running, () => lastTurnDuration, editorState),
+		);
+		editorInstalled = true;
+	}
+
+	function uninstallEditor(ctx: ExtensionContext) {
+		if (!editorInstalled || ctx.mode !== "tui") return;
+		ctx.ui.setEditorComponent(previousEditorFactory);
+		previousEditorFactory = undefined;
+		editorInstalled = false;
+	}
+
+	function clearHud(ctx: ExtensionContext) {
+		ctx.ui.setFooter(undefined);
+		uninstallEditor(ctx);
+	}
+
+	function applyHud(ctx: ExtensionContext) {
 		config = loadConfig(ctx);
+		if (runtimeStyle) config = { ...config, style: runtimeStyle };
 
 		if (!isEnabled()) {
-			ctx.ui.setFooter(undefined);
+			clearHud(ctx);
 			return;
 		}
 
-		ctx.ui.setFooter(createHudFooter(pi, ctx, config, () => running, () => lastTurnDuration));
+		if (config.style === "border") installEditor(ctx);
+		else uninstallEditor(ctx);
+		ctx.ui.setFooter(createHudFooter(pi, ctx, config, () => running, () => lastTurnDuration, editorState));
+	}
+
+	function styleOptions(i18n = currentI18n()): string[] {
+		return [`1 - ${i18n.styleNames.classic}`, `2 - ${i18n.styleNames.border}`];
+	}
+
+	function parseStyleChoice(value: string | undefined): HudStyle | undefined {
+		if (!value) return undefined;
+		const trimmed = value.trim();
+		if (trimmed.startsWith("1 -")) return "classic";
+		if (trimmed.startsWith("2 -")) return "border";
+		return normalizeStyle(trimmed);
+	}
+
+	async function chooseStyle(args: string, ctx: ExtensionContext): Promise<HudStyle | undefined> {
+		const fromArgs = parseStyleChoice(args);
+		if (fromArgs) return fromArgs;
+		if (args.trim()) return undefined;
+		if (ctx.mode === "tui") {
+			const selected = await ctx.ui.select(currentI18n().styleSelectTitle, styleOptions());
+			return parseStyleChoice(selected);
+		}
+		return config.style === "classic" ? "border" : "classic";
 	}
 
 	pi.on("session_start", (_event, ctx) => {
-		installFooter(ctx);
+		applyHud(ctx);
 	});
 
 	pi.on("agent_start", (_event, ctx) => {
@@ -80,6 +139,8 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_shutdown", (_event, ctx) => {
 		stopRunningTimer(ctx);
+		uninstallEditor(ctx);
+		delete hudGlobal[ACTIVE_EXTENSION_KEY];
 	});
 
 	pi.registerCommand("hud-footer", {
@@ -87,12 +148,12 @@ export default function (pi: ExtensionAPI) {
 		handler: async (_args, ctx) => {
 			runtimeEnabled = !isEnabled();
 			if (runtimeEnabled) {
-				installFooter(ctx);
+				applyHud(ctx);
 				ctx.ui.notify(currentI18n().footerEnabled, "info");
 				return;
 			}
 
-			ctx.ui.setFooter(undefined);
+			clearHud(ctx);
 			ctx.ui.notify(currentI18n().footerDisabled, "info");
 		},
 	});
@@ -100,8 +161,25 @@ export default function (pi: ExtensionAPI) {
 	pi.registerCommand("hud-footer-reload", {
 		description: commandI18n.commands.reloadDescription,
 		handler: async (_args, ctx) => {
-			installFooter(ctx);
+			applyHud(ctx);
 			ctx.ui.notify(currentI18n().configReloaded, "info");
 		},
+	});
+
+	async function handleThemeCommand(args: string, ctx: ExtensionContext) {
+		const nextStyle = await chooseStyle(args, ctx);
+		if (!nextStyle) {
+			ctx.ui.notify(currentI18n().commands.styleDescription, "warning");
+			return;
+		}
+
+		runtimeStyle = nextStyle;
+		applyHud(ctx);
+		ctx.ui.notify(currentI18n().styleChanged(currentI18n().styleNames[nextStyle]), "info");
+	}
+
+	pi.registerCommand("hud-footer-theme", {
+		description: commandI18n.commands.styleDescription,
+		handler: handleThemeCommand,
 	});
 }

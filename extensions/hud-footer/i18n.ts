@@ -1,4 +1,4 @@
-import type { HudLanguage, HudLanguageSetting } from "./types.ts";
+import type { HudLanguage, HudLanguageSetting, HudStyle } from "./types.ts";
 
 type FooterLabels = {
 	ready: string;
@@ -7,6 +7,8 @@ type FooterLabels = {
 	cacheRate: string;
 	elapsed: string;
 	cost: string;
+	tools: string;
+	context: string;
 	tokenBreakdown(input: string, output: string, cacheRead: string, cacheWrite: string): string;
 };
 
@@ -18,9 +20,13 @@ type HudMessages = {
 	footerEnabled: string;
 	footerDisabled: string;
 	configReloaded: string;
+	styleNames: Record<HudStyle, string>;
+	styleSelectTitle: string;
+	styleChanged(styleName: string): string;
 	commands: {
 		toggleDescription: string;
 		reloadDescription: string;
+		styleDescription: string;
 	};
 };
 
@@ -33,6 +39,8 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 			cacheRate: "cache hit",
 			elapsed: "elapsed",
 			cost: "cost",
+			tools: "tools:",
+			context: "ctx",
 			tokenBreakdown: (input, output, cacheRead, cacheWrite) =>
 				`(in ${input} / out ${output} / cache R${cacheRead} W${cacheWrite})`,
 		},
@@ -41,9 +49,16 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 		footerEnabled: "HUD footer enabled",
 		footerDisabled: "HUD footer disabled",
 		configReloaded: "HUD footer config reloaded",
+		styleNames: {
+			classic: "Style 1 · classic footer",
+			border: "Style 2 · editor border",
+		},
+		styleSelectTitle: "Select HUD footer style",
+		styleChanged: (styleName) => `HUD footer style: ${styleName}`,
 		commands: {
 			toggleDescription: "Toggle Claude HUD style custom footer.",
 			reloadDescription: "Reload pi-hud-footer config.",
+			styleDescription: "Open the pi-hud-footer theme selector.",
 		},
 	},
 	zh: {
@@ -54,6 +69,8 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 			cacheRate: "缓存率",
 			elapsed: "耗时",
 			cost: "费用",
+			tools: "工具:",
+			context: "上下文",
 			tokenBreakdown: (input, output, cacheRead, cacheWrite) =>
 				`(输入 ${input} / 输出 ${output} / 缓存 R${cacheRead} W${cacheWrite})`,
 		},
@@ -62,9 +79,16 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 		footerEnabled: "HUD footer 已启用",
 		footerDisabled: "HUD footer 已禁用",
 		configReloaded: "HUD footer 配置已重新加载",
+		styleNames: {
+			classic: "样式 1 · 经典 footer",
+			border: "样式 2 · 输入框边框",
+		},
+		styleSelectTitle: "选择 HUD footer 样式",
+		styleChanged: (styleName) => `HUD footer 样式：${styleName}`,
 		commands: {
 			toggleDescription: "切换 Claude HUD 风格自定义 footer。",
 			reloadDescription: "重新加载 pi-hud-footer 配置。",
+			styleDescription: "打开 pi-hud-footer 主题选择界面。",
 		},
 	},
 };

@@ -38,6 +38,7 @@ Or:
 {
   "enabled": true,
   "language": "auto",
+  "style": "border",
   "barWidth": 18,
   "showTools": true,
   "maxTools": 7,
@@ -54,11 +55,12 @@ Or:
 |---|---:|---:|---|
 | `enabled` | boolean | `true` | Enable the HUD footer when a session starts. |
 | `language` | string | `"auto"` | UI language. Supported values: `"auto"`, `"zh"`, `"en"`. `"auto"` selects Chinese or English from the system language and falls back to English for unsupported system languages or invalid configuration values. |
+| `style` | string | `"border"` | HUD style. `"classic"`/`1` is the classic three-line footer style; `"border"`/`2` is the editor-border style. You can also open a TUI selector and switch temporarily with `/hud-footer-theme`. |
 | `barWidth` | number | `18` | Width of the context progress bar. Clamped to `6..40`. |
-| `showTools` | boolean | `true` | Show the tool call statistics line. |
-| `maxTools` | number | `7` | Maximum number of tools shown in the tool statistics line. Clamped to `1..20`. |
-| `showCost` | boolean | `true` | Show estimated cost. |
-| `showElapsed` | boolean | `true` | Show elapsed session time in the footer. |
+| `showTools` | boolean | `true` | Show the tool call statistics line; when enabled, the line keeps a fixed height and shows `-` before any tool calls. |
+| `maxTools` | number | `7` | Maximum number of tools shown in the tool statistics summary. Clamped to `1..20`. |
+| `showCost` | boolean | `true` | Show estimated cost (embedded in the editor top border by default). |
+| `showElapsed` | boolean | `true` | Show elapsed session time (embedded in the editor top border by default). |
 | `showCacheRate` | boolean | `true` | Show token cache hit rate. |
 | `showTurnDuration` | boolean | `true` | Show a turn duration notification after each assistant turn. |
 

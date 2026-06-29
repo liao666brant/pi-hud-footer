@@ -3,11 +3,25 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { normalizeLanguageSetting } from "./i18n.ts";
-import type { HudConfig } from "./types.ts";
+import type { HudConfig, HudStyle } from "./types.ts";
+
+const STYLE_ALIASES: Record<string, HudStyle> = {
+	"1": "classic",
+	classic: "classic",
+	footer: "classic",
+	legacy: "classic",
+	default: "classic",
+	"2": "border",
+	border: "border",
+	editor: "border",
+	compact: "border",
+	current: "border",
+};
 
 export const DEFAULT_CONFIG: HudConfig = {
 	enabled: true,
 	language: "auto",
+	style: "border",
 	barWidth: 18,
 	showTools: true,
 	maxTools: 7,
@@ -31,11 +45,18 @@ function mergeLanguage(base: HudConfig, patch: Record<string, unknown>): HudConf
 	return normalizeLanguageSetting(patch.language) ?? "en";
 }
 
+export function normalizeStyle(value: unknown): HudStyle | undefined {
+	if (typeof value === "number") return STYLE_ALIASES[String(value)];
+	if (typeof value !== "string") return undefined;
+	return STYLE_ALIASES[value.trim().toLowerCase()];
+}
+
 function mergeConfig(base: HudConfig, patch: unknown): HudConfig {
 	if (!isObject(patch)) return base;
 	return {
 		enabled: typeof patch.enabled === "boolean" ? patch.enabled : base.enabled,
 		language: mergeLanguage(base, patch),
+		style: normalizeStyle(patch.style) ?? base.style,
 		barWidth: clampInt(patch.barWidth, base.barWidth, 6, 40),
 		showTools: typeof patch.showTools === "boolean" ? patch.showTools : base.showTools,
 		maxTools: clampInt(patch.maxTools, base.maxTools, 1, 20),

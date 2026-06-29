@@ -38,6 +38,7 @@
 {
   "enabled": true,
   "language": "auto",
+  "style": "border",
   "barWidth": 18,
   "showTools": true,
   "maxTools": 7,
@@ -54,11 +55,12 @@
 |---|---:|---:|---|
 | `enabled` | boolean | `true` | 是否在会话启动时启用 HUD footer。 |
 | `language` | string | `"auto"` | 界面语言。可选 `"auto"`、`"zh"`、`"en"`；`"auto"` 会根据系统语言选择中文或英文，其他系统语言或无效配置回退英文。 |
+| `style` | string | `"border"` | HUD 样式。`"classic"`/`1` 为经典 footer 三行样式；`"border"`/`2` 为输入框边框样式。TUI 中也可用 `/hud-footer-theme` 打开选择器临时切换。 |
 | `barWidth` | number | `18` | 上下文进度条宽度，会限制在 `6..40`。 |
-| `showTools` | boolean | `true` | 是否显示工具调用统计行。 |
-| `maxTools` | number | `7` | 工具统计行最多显示多少个工具，会限制在 `1..20`。 |
-| `showCost` | boolean | `true` | 是否显示费用估算。 |
-| `showElapsed` | boolean | `true` | 是否在 footer 显示会话已用时间。 |
+| `showTools` | boolean | `true` | 是否显示工具调用统计行；开启时该行会保持固定高度，暂无工具调用时显示 `-`。 |
+| `maxTools` | number | `7` | 工具统计最多显示多少个工具，会限制在 `1..20`。 |
+| `showCost` | boolean | `true` | 是否显示费用估算（默认嵌入输入框上边框）。 |
+| `showElapsed` | boolean | `true` | 是否显示会话已用时间（默认嵌入输入框上边框）。 |
 | `showCacheRate` | boolean | `true` | 是否显示词元缓存命中率。 |
 | `showTurnDuration` | boolean | `true` | 是否在每轮对话结束后显示本轮用时通知。 |
 
