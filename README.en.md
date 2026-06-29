@@ -4,43 +4,117 @@ English | [简体中文](README.md)
 
 A Claude HUD style custom footer/statusline extension for [pi coding agent](https://github.com/earendil-works/pi).
 
-It replaces pi's default footer with a compact multi-line HUD for quickly checking the model, context usage, token usage, cache hit rate, cost, and tool call statistics.
+It keeps model, context, token, cache, cost, tool-call, and running-state information visible near the bottom of the TUI. The default `border` style embeds stable HUD information into the input editor borders and leaves only dynamically growing tool statistics in the footer, avoiding footer-height changes while the agent is thinking.
 
-## Features
+## Highlights
 
-- Shows the current model and thinking level
-- Shows a context usage progress bar
-- Shows the current project name and git branch
-- Shows running / ready status
-- Shows token usage summary
-- Shows cache read/write tokens
-- Shows token cache hit rate
-- Shows estimated cost
-- Shows tool call statistics while keeping footer height stable
-- Shows turn duration after each assistant turn
-- Supports two HUD styles: classic footer style and editor-border style
-- Supports Chinese and English UI text; defaults to the system language and falls back to English for unsupported or invalid language settings
+- Shows the current model, thinking level, project name, and git branch
+- Shows context usage, token usage, cache read/write tokens, and cache hit rate
+- Shows running / ready state, session elapsed time, estimated cost, and turn duration
+- Shows tool-call statistics while keeping footer height stable
+- Supports two HUD styles: `border` editor-border style and `classic` footer style
+- Supports Chinese and English UI text, selected automatically from the system language by default
 - Supports global and project-level JSON configuration
+
+## Themes / Styles
+
+| Style | Alias | Best for | Description |
+|---|---|---|---|
+| `border` | `2` | Recommended default | Embeds model, elapsed time, cost, context usage, token metrics, and state into the input editor borders. Tool statistics stay in the footer line for a more stable layout. |
+| `classic` | `1` | Previous layout | Displays HUD information below the input box, suitable for users who prefer the previous three-line footer layout. |
+
+Temporarily switch the style for the current TUI session:
+
+```text
+/hud-footer-theme
+```
+
+To persist the style, write it to your configuration file:
+
+```json
+{
+  "style": "border"
+}
+```
+
+### `border` / `2`: editor-border style
+
+![Editor-border style example](docs/assets/hud-footer-border.png)
+
+### `classic` / `1`: classic footer style
+
+![Classic footer style example](docs/assets/hud-footer-classic.png)
 
 ## Installation
 
-Install from a local path:
+Recommended installation from npm:
+
+```bash
+pi install npm:pi-hud-footer
+```
+
+You can also install from GitHub without specifying a version:
+
+```bash
+pi install git:github.com/liao666brant/pi-hud-footer
+```
+
+For local development or debugging, install from a local path:
 
 ```bash
 pi install /path/to/pi-hud-footer
 ```
 
-Install from GitHub:
+## Commands
 
-```bash
-pi install git:github.com:USER/pi-hud-footer@v0.3.0
+| Command | Description |
+|---|---|
+| `/hud-footer` | Toggle the HUD footer on or off for the current session. |
+| `/hud-footer-reload` | Reload configuration and refresh the HUD footer. |
+| `/hud-footer-theme` | Open a TUI selector and temporarily switch the current session style. |
+
+## Configuration
+
+Full configuration reference: [docs/CONFIG.en.md](docs/CONFIG.en.md)
+
+Example configuration: [examples/hud-footer.json](examples/hud-footer.json)
+
+| Level | Path | Notes |
+|---|---|---|
+| Global | `~/.pi/agent/hud-footer.json` | Applies to all sessions. |
+| Project | `.pi/hud-footer.json` | Read only when the project is trusted, and overrides global configuration. |
+
+After changing configuration, run this in pi:
+
+```text
+/hud-footer-reload
 ```
 
-If published to npm, you can also install it with:
+Or:
 
-```bash
-pi install npm:pi-hud-footer
+```text
+/reload
 ```
+
+## Metrics
+
+Token metrics use these icons:
+
+| Icon | Meaning |
+|---|---|
+| `↑` | Input tokens |
+| `↓` | Output tokens |
+| `⇣` | Cache read tokens |
+| `⇡` | Cache write tokens |
+| `⚡` | Cache hit rate |
+
+Cache hit rate formula:
+
+```txt
+cacheRead / (input + cacheRead + cacheWrite)
+```
+
+Meaning: cached input tokens / total input-side tokens.
 
 ## Development / temporary loading
 
@@ -61,54 +135,6 @@ After making changes, run this in pi:
 ```text
 /reload
 ```
-
-## Commands
-
-```text
-/hud-footer
-```
-
-Toggle the HUD footer on or off for the current session.
-
-```text
-/hud-footer-reload
-```
-
-Reload the configuration and refresh the HUD footer.
-
-```text
-/hud-footer-theme
-```
-
-Open a TUI selector and temporarily switch the HUD style.
-
-## Configuration
-
-See [docs/CONFIG.en.md](docs/CONFIG.en.md).
-
-Example configuration: [examples/hud-footer.json](examples/hud-footer.json)
-
-Global configuration:
-
-```txt
-~/.pi/agent/hud-footer.json
-```
-
-Project configuration:
-
-```txt
-.pi/hud-footer.json
-```
-
-Project configuration is read only when the project is trusted, and it overrides global configuration.
-
-## Cache hit rate formula
-
-```txt
-cacheRead / (input + cacheRead + cacheWrite)
-```
-
-That is: cached input tokens / total input-side tokens.
 
 ## Publishing
 

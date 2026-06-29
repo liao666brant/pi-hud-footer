@@ -64,6 +64,25 @@ Or:
 | `showCacheRate` | boolean | `true` | Show token cache hit rate. |
 | `showTurnDuration` | boolean | `true` | Show a turn duration notification after each assistant turn. |
 
+## Style values
+
+| Value | Description |
+|---|---|
+| `border` / `2` | Recommended default. Embeds stable HUD information into the input editor borders while keeping tool statistics in the footer line to avoid dynamic footer-height changes. |
+| `classic` / `1` | Classic three-line footer style, suitable for users who prefer the previous layout. |
+
+`/hud-footer-theme` only switches the current session temporarily. To persist the style, set the `style` option.
+
+## Token metric icons
+
+| Icon | Meaning |
+|---|---|
+| `↑` | Input tokens |
+| `↓` | Output tokens |
+| `⇣` | Cache read tokens |
+| `⇡` | Cache write tokens |
+| `⚡` | Cache hit rate |
+
 ## Cache hit rate formula
 
 ```txt
