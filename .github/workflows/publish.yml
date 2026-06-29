@@ -51,7 +51,6 @@ jobs:
             exit 1
           fi
 
-      - name: Stage publish
-        # Uses npm Trusted Publishing (OIDC) with the `npm stage publish` action.
-        # A maintainer must approve the staged package before it goes live.
-        run: npm stage publish --access public --provenance
+      - name: Publish
+        # Uses npm Trusted Publishing (OIDC) to publish directly.
+        run: npm publish --access public --provenance
