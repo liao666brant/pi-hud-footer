@@ -33,7 +33,7 @@ pi install /path/to/pi-hud-footer
 Install from GitHub:
 
 ```bash
-pi install git:github.com:USER/pi-hud-footer@v0.2.0
+pi install git:github.com:USER/pi-hud-footer@v0.3.0
 ```
 
 If published to npm, you can also install it with:
