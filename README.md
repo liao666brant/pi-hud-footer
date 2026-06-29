@@ -4,7 +4,7 @@
 
 一个给 [pi coding agent](https://github.com/earendil-works/pi) 使用的 Claude HUD 风格自定义 footer/statusline 插件。
 
-它把模型、上下文、词元、缓存、费用、工具调用和运行状态集中显示在 TUI 底部。默认的 `border` 样式会把稳定信息嵌入输入框边框，只把会动态增长的工具统计保留在 footer 中，避免 agent 思考输出时 footer 高度变化导致输入区重排。
+它把模型、上下文、词元、缓存、费用、工具调用和运行状态集中显示在 TUI 底部。默认使用 `classic` 经典 footer 样式；也可以切换到 `border` 输入框边框样式，把稳定信息嵌入输入框边框，只把会动态增长的工具统计保留在 footer 中。
 
 ## 功能亮点
 
@@ -12,7 +12,7 @@
 - 显示上下文使用进度、词元用量、缓存读写和缓存命中率
 - 显示 running / ready 状态、会话耗时、费用估算和每轮用时
 - 显示工具调用统计，并保持 footer 高度稳定
-- 支持两套 HUD 样式：`border` 输入框边框样式和 `classic` 经典 footer 样式
+- 支持两套 HUD 样式：`classic` 经典 footer 样式和 `border` 输入框边框样式
 - 支持中文/英文界面，默认根据系统语言自动选择
 - 支持全局和项目级 JSON 配置
 
@@ -20,30 +20,30 @@
 
 | 样式 | 别名 | 适合场景 | 说明 |
 |---|---|---|---|
-| `border` | `2` | 默认推荐 | 将模型、耗时、费用、上下文、词元和状态嵌入输入框上下边框；工具统计保留在 footer 行，布局更稳定。 |
-| `classic` | `1` | 旧版体验 | 将 HUD 信息集中显示在输入框下方，适合喜欢旧版三行 footer 的用户。 |
+| `classic` | `1` | 默认主题 | 将 HUD 信息集中显示在输入框下方，保留经典三行 footer 体验。 |
+| `border` | `2` | 边框布局 | 将模型、耗时、费用、上下文、词元和状态嵌入输入框上下边框；工具统计保留在 footer 行，布局更稳定。 |
 
-在 TUI 中临时切换当前会话样式：
+在 TUI 中切换并保存样式：
 
 ```text
 /hud-footer-theme
 ```
 
-持久化样式请写入配置文件：
+命令会写入配置文件：如果当前受信任项目已存在 `.pi/hud-footer.json`，则保存到项目配置；否则保存到全局配置 `~/.pi/agent/hud-footer.json`。也可以手动设置：
 
 ```json
 {
-  "style": "border"
+  "style": "classic"
 }
 ```
-
-### `border` / `2`：输入框边框样式
-
-![输入框边框样式示例](docs/assets/hud-footer-border.png)
 
 ### `classic` / `1`：经典 footer 样式
 
 ![经典 footer 样式示例](docs/assets/hud-footer-classic.png)
+
+### `border` / `2`：输入框边框样式
+
+![输入框边框样式示例](docs/assets/hud-footer-border.png)
 
 ## 安装
 
@@ -71,7 +71,7 @@ pi install /path/to/pi-hud-footer
 |---|---|
 | `/hud-footer` | 切换当前会话的 HUD footer 开/关。 |
 | `/hud-footer-reload` | 重新读取配置并刷新 HUD footer。 |
-| `/hud-footer-theme` | 打开 TUI 选择器，临时切换当前会话样式。 |
+| `/hud-footer-theme` | 打开 TUI 选择器，切换并保存 HUD 样式。 |
 
 ## 配置
 

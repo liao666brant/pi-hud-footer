@@ -4,7 +4,7 @@ English | [简体中文](README.md)
 
 A Claude HUD style custom footer/statusline extension for [pi coding agent](https://github.com/earendil-works/pi).
 
-It keeps model, context, token, cache, cost, tool-call, and running-state information visible near the bottom of the TUI. The default `border` style embeds stable HUD information into the input editor borders and leaves only dynamically growing tool statistics in the footer, avoiding footer-height changes while the agent is thinking.
+It keeps model, context, token, cache, cost, tool-call, and running-state information visible near the bottom of the TUI. The default is the `classic` footer style. You can also switch to the `border` editor-border style, which embeds stable HUD information into the input editor borders and leaves only dynamically growing tool statistics in the footer.
 
 ## Highlights
 
@@ -12,7 +12,7 @@ It keeps model, context, token, cache, cost, tool-call, and running-state inform
 - Shows context usage, token usage, cache read/write tokens, and cache hit rate
 - Shows running / ready state, session elapsed time, estimated cost, and turn duration
 - Shows tool-call statistics while keeping footer height stable
-- Supports two HUD styles: `border` editor-border style and `classic` footer style
+- Supports two HUD styles: `classic` footer style and `border` editor-border style
 - Supports Chinese and English UI text, selected automatically from the system language by default
 - Supports global and project-level JSON configuration
 
@@ -20,30 +20,30 @@ It keeps model, context, token, cache, cost, tool-call, and running-state inform
 
 | Style | Alias | Best for | Description |
 |---|---|---|---|
-| `border` | `2` | Recommended default | Embeds model, elapsed time, cost, context usage, token metrics, and state into the input editor borders. Tool statistics stay in the footer line for a more stable layout. |
-| `classic` | `1` | Previous layout | Displays HUD information below the input box, suitable for users who prefer the previous three-line footer layout. |
+| `classic` | `1` | Default theme | Displays HUD information below the input box and keeps the classic three-line footer experience. |
+| `border` | `2` | Border layout | Embeds model, elapsed time, cost, context usage, token metrics, and state into the input editor borders. Tool statistics stay in the footer line for a more stable layout. |
 
-Temporarily switch the style for the current TUI session:
+Switch and save the style from the TUI:
 
 ```text
 /hud-footer-theme
 ```
 
-To persist the style, write it to your configuration file:
+The command writes to the configuration file. If the current trusted project already has `.pi/hud-footer.json`, it saves to the project config; otherwise it saves to the global config at `~/.pi/agent/hud-footer.json`. You can also set it manually:
 
 ```json
 {
-  "style": "border"
+  "style": "classic"
 }
 ```
-
-### `border` / `2`: editor-border style
-
-![Editor-border style example](docs/assets/hud-footer-border.png)
 
 ### `classic` / `1`: classic footer style
 
 ![Classic footer style example](docs/assets/hud-footer-classic.png)
+
+### `border` / `2`: editor-border style
+
+![Editor-border style example](docs/assets/hud-footer-border.png)
 
 ## Installation
 
@@ -71,7 +71,7 @@ pi install /path/to/pi-hud-footer
 |---|---|
 | `/hud-footer` | Toggle the HUD footer on or off for the current session. |
 | `/hud-footer-reload` | Reload configuration and refresh the HUD footer. |
-| `/hud-footer-theme` | Open a TUI selector and temporarily switch the current session style. |
+| `/hud-footer-theme` | Open a TUI selector, switch the HUD style, and save it. |
 
 ## Configuration
 

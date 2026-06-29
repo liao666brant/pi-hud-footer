@@ -1,9 +1,11 @@
 import { CONFIG_DIR_NAME, type ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { normalizeLanguageSetting } from "./i18n.ts";
 import type { HudConfig, HudStyle } from "./types.ts";
+
+const CONFIG_FILE_NAME = "hud-footer.json";
 
 const STYLE_ALIASES: Record<string, HudStyle> = {
 	"1": "classic",
@@ -21,7 +23,7 @@ const STYLE_ALIASES: Record<string, HudStyle> = {
 export const DEFAULT_CONFIG: HudConfig = {
 	enabled: true,
 	language: "auto",
-	style: "border",
+	style: "classic",
 	barWidth: 18,
 	showTools: true,
 	maxTools: 7,
@@ -40,6 +42,10 @@ function clampInt(value: unknown, fallback: number, min: number, max: number): n
 	return Math.max(min, Math.min(max, Math.round(value)));
 }
 
+function booleanOption(value: unknown, fallback: boolean): boolean {
+	return typeof value === "boolean" ? value : fallback;
+}
+
 function mergeLanguage(base: HudConfig, patch: Record<string, unknown>): HudConfig["language"] {
 	if (!Object.hasOwn(patch, "language")) return base.language;
 	return normalizeLanguageSetting(patch.language) ?? "en";
@@ -54,17 +60,31 @@ export function normalizeStyle(value: unknown): HudStyle | undefined {
 function mergeConfig(base: HudConfig, patch: unknown): HudConfig {
 	if (!isObject(patch)) return base;
 	return {
-		enabled: typeof patch.enabled === "boolean" ? patch.enabled : base.enabled,
+		enabled: booleanOption(patch.enabled, base.enabled),
 		language: mergeLanguage(base, patch),
 		style: normalizeStyle(patch.style) ?? base.style,
 		barWidth: clampInt(patch.barWidth, base.barWidth, 6, 40),
-		showTools: typeof patch.showTools === "boolean" ? patch.showTools : base.showTools,
+		showTools: booleanOption(patch.showTools, base.showTools),
 		maxTools: clampInt(patch.maxTools, base.maxTools, 1, 20),
-		showCost: typeof patch.showCost === "boolean" ? patch.showCost : base.showCost,
-		showElapsed: typeof patch.showElapsed === "boolean" ? patch.showElapsed : base.showElapsed,
-		showCacheRate: typeof patch.showCacheRate === "boolean" ? patch.showCacheRate : base.showCacheRate,
-		showTurnDuration: typeof patch.showTurnDuration === "boolean" ? patch.showTurnDuration : base.showTurnDuration,
+		showCost: booleanOption(patch.showCost, base.showCost),
+		showElapsed: booleanOption(patch.showElapsed, base.showElapsed),
+		showCacheRate: booleanOption(patch.showCacheRate, base.showCacheRate),
+		showTurnDuration: booleanOption(patch.showTurnDuration, base.showTurnDuration),
 	};
+}
+
+function globalConfigPath(): string {
+	return join(homedir(), CONFIG_DIR_NAME, "agent", CONFIG_FILE_NAME);
+}
+
+function projectConfigPath(ctx: ExtensionContext): string {
+	return join(ctx.cwd, CONFIG_DIR_NAME, CONFIG_FILE_NAME);
+}
+
+function styleConfigPath(ctx: ExtensionContext): string {
+	const projectPath = projectConfigPath(ctx);
+	if (ctx.isProjectTrusted() && existsSync(projectPath)) return projectPath;
+	return globalConfigPath();
 }
 
 function readJsonConfig(path: string): unknown {
@@ -77,14 +97,25 @@ function readJsonConfig(path: string): unknown {
 	}
 }
 
+function readJsonObject(path: string): Record<string, unknown> {
+	const config = readJsonConfig(path);
+	return isObject(config) ? config : {};
+}
+
+export function saveConfigStyle(ctx: ExtensionContext, style: HudStyle): string {
+	const path = styleConfigPath(ctx);
+	const nextConfig = { ...readJsonObject(path), style };
+	mkdirSync(dirname(path), { recursive: true });
+	writeFileSync(path, `${JSON.stringify(nextConfig, null, 2)}\n`, "utf8");
+	return path;
+}
+
 export function loadConfig(ctx: ExtensionContext): HudConfig {
 	let config = { ...DEFAULT_CONFIG };
-	const globalPath = join(homedir(), CONFIG_DIR_NAME, "agent", "hud-footer.json");
-	config = mergeConfig(config, readJsonConfig(globalPath));
+	config = mergeConfig(config, readJsonConfig(globalConfigPath()));
 
 	if (ctx.isProjectTrusted()) {
-		const projectPath = join(ctx.cwd, CONFIG_DIR_NAME, "hud-footer.json");
-		config = mergeConfig(config, readJsonConfig(projectPath));
+		config = mergeConfig(config, readJsonConfig(projectConfigPath(ctx)));
 	}
 
 	return config;

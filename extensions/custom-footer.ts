@@ -1,5 +1,5 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { DEFAULT_CONFIG, loadConfig, normalizeStyle } from "./hud-footer/config.ts";
+import { DEFAULT_CONFIG, loadConfig, normalizeStyle, saveConfigStyle } from "./hud-footer/config.ts";
 import { createHudEditorFactory } from "./hud-footer/editor.ts";
 import { fmtTurnDuration } from "./hud-footer/format.ts";
 import { getI18n } from "./hud-footer/i18n.ts";
@@ -20,7 +20,6 @@ export default function (pi: ExtensionAPI) {
 	let lastTurnDuration: number | undefined;
 	let runningTimer: ReturnType<typeof setInterval> | undefined;
 	let config: HudConfig = { ...DEFAULT_CONFIG };
-	let runtimeStyle: HudStyle | undefined;
 	let editorInstalled = false;
 	let previousEditorFactory: ReturnType<ExtensionContext["ui"]["getEditorComponent"]> | undefined;
 	const editorState: HudEditorState = {};
@@ -79,7 +78,6 @@ export default function (pi: ExtensionAPI) {
 
 	function applyHud(ctx: ExtensionContext) {
 		config = loadConfig(ctx);
-		if (runtimeStyle) config = { ...config, style: runtimeStyle };
 
 		if (!isEnabled()) {
 			clearHud(ctx);
@@ -104,9 +102,10 @@ export default function (pi: ExtensionAPI) {
 	}
 
 	async function chooseStyle(args: string, ctx: ExtensionContext): Promise<HudStyle | undefined> {
-		const fromArgs = parseStyleChoice(args);
+		const trimmedArgs = args.trim();
+		const fromArgs = parseStyleChoice(trimmedArgs);
 		if (fromArgs) return fromArgs;
-		if (args.trim()) return undefined;
+		if (trimmedArgs) return undefined;
 		if (ctx.mode === "tui") {
 			const selected = await ctx.ui.select(currentI18n().styleSelectTitle, styleOptions());
 			return parseStyleChoice(selected);
@@ -173,9 +172,16 @@ export default function (pi: ExtensionAPI) {
 			return;
 		}
 
-		runtimeStyle = nextStyle;
+		try {
+			saveConfigStyle(ctx, nextStyle);
+		} catch (error) {
+			console.error("[pi-hud-footer] Failed to save style:", error);
+			ctx.ui.notify(currentI18n().styleSaveFailed, "error");
+			return;
+		}
+
 		applyHud(ctx);
-		ctx.ui.notify(currentI18n().styleChanged(currentI18n().styleNames[nextStyle]), "info");
+		ctx.ui.notify(currentI18n().styleSaved(currentI18n().styleNames[nextStyle]), "info");
 	}
 
 	pi.registerCommand("hud-footer-theme", {

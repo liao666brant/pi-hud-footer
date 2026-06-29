@@ -38,7 +38,7 @@
 {
   "enabled": true,
   "language": "auto",
-  "style": "border",
+  "style": "classic",
   "barWidth": 18,
   "showTools": true,
   "maxTools": 7,
@@ -55,12 +55,12 @@
 |---|---:|---:|---|
 | `enabled` | boolean | `true` | 是否在会话启动时启用 HUD footer。 |
 | `language` | string | `"auto"` | 界面语言。可选 `"auto"`、`"zh"`、`"en"`；`"auto"` 会根据系统语言选择中文或英文，其他系统语言或无效配置回退英文。 |
-| `style` | string | `"border"` | HUD 样式。`"classic"`/`1` 为经典 footer 三行样式；`"border"`/`2` 为输入框边框样式。TUI 中也可用 `/hud-footer-theme` 打开选择器临时切换。 |
+| `style` | string | `"classic"` | HUD 样式。`"classic"`/`1` 为默认经典 footer 三行样式；`"border"`/`2` 为输入框边框样式。TUI 中也可用 `/hud-footer-theme` 打开选择器切换并保存。 |
 | `barWidth` | number | `18` | 上下文进度条宽度，会限制在 `6..40`。 |
 | `showTools` | boolean | `true` | 是否显示工具调用统计行；开启时该行会保持固定高度，暂无工具调用时显示 `-`。 |
 | `maxTools` | number | `7` | 工具统计最多显示多少个工具，会限制在 `1..20`。 |
-| `showCost` | boolean | `true` | 是否显示费用估算（默认嵌入输入框上边框）。 |
-| `showElapsed` | boolean | `true` | 是否显示会话已用时间（默认嵌入输入框上边框）。 |
+| `showCost` | boolean | `true` | 是否显示费用估算；在 `border` 样式下会嵌入输入框上边框。 |
+| `showElapsed` | boolean | `true` | 是否显示会话已用时间；在 `border` 样式下会嵌入输入框上边框。 |
 | `showCacheRate` | boolean | `true` | 是否显示词元缓存命中率。 |
 | `showTurnDuration` | boolean | `true` | 是否在每轮对话结束后显示本轮用时通知。 |
 
@@ -68,10 +68,10 @@
 
 | 值 | 说明 |
 |---|---|
-| `border` / `2` | 默认推荐。将稳定 HUD 信息嵌入输入框上下边框，工具统计保留在 footer 行，避免 footer 高度动态变化。 |
-| `classic` / `1` | 经典三行 footer 样式，适合保留旧版显示习惯。 |
+| `classic` / `1` | 默认主题。经典三行 footer 样式，适合保留旧版显示习惯。 |
+| `border` / `2` | 输入框边框样式。将稳定 HUD 信息嵌入输入框上下边框，工具统计保留在 footer 行，避免 footer 高度动态变化。 |
 
-`/hud-footer-theme` 只会临时切换当前会话样式；如需持久化，请设置 `style` 配置项。
+`/hud-footer-theme` 会切换并保存样式：如果当前受信任项目已存在 `.pi/hud-footer.json`，则写入项目配置；否则写入全局配置 `~/.pi/agent/hud-footer.json`。
 
 ## 词元指标图标
 

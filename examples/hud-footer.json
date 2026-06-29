@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "language": "auto",
-  "style": "border",
+  "style": "classic",
   "barWidth": 18,
   "showTools": true,
   "maxTools": 7,

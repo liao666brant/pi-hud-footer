@@ -22,7 +22,8 @@ type HudMessages = {
 	configReloaded: string;
 	styleNames: Record<HudStyle, string>;
 	styleSelectTitle: string;
-	styleChanged(styleName: string): string;
+	styleSaved(styleName: string): string;
+	styleSaveFailed: string;
 	commands: {
 		toggleDescription: string;
 		reloadDescription: string;
@@ -54,11 +55,12 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 			border: "Style 2 · editor border",
 		},
 		styleSelectTitle: "Select HUD footer style",
-		styleChanged: (styleName) => `HUD footer style: ${styleName}`,
+		styleSaved: (styleName) => `HUD footer style saved: ${styleName}`,
+		styleSaveFailed: "Failed to save HUD footer style.",
 		commands: {
 			toggleDescription: "Toggle Claude HUD style custom footer.",
 			reloadDescription: "Reload pi-hud-footer config.",
-			styleDescription: "Open the pi-hud-footer theme selector.",
+			styleDescription: "Open the pi-hud-footer theme selector and save the style.",
 		},
 	},
 	zh: {
@@ -84,11 +86,12 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 			border: "样式 2 · 输入框边框",
 		},
 		styleSelectTitle: "选择 HUD footer 样式",
-		styleChanged: (styleName) => `HUD footer 样式：${styleName}`,
+		styleSaved: (styleName) => `HUD footer 样式已保存：${styleName}`,
+		styleSaveFailed: "保存 HUD footer 样式失败。",
 		commands: {
 			toggleDescription: "切换 Claude HUD 风格自定义 footer。",
 			reloadDescription: "重新加载 pi-hud-footer 配置。",
-			styleDescription: "打开 pi-hud-footer 主题选择界面。",
+			styleDescription: "打开 pi-hud-footer 主题选择界面并保存样式。",
 		},
 	},
 };
