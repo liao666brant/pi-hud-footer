@@ -1,0 +1,47 @@
+{
+  // 总开关：false 会完全关闭 HUD footer。
+  "enabled": true,
+
+  // 界面语言："auto" / "zh" / "en"。
+  "language": "auto",
+
+  // HUD 样式："classic" 经典 footer；"border" 输入框边框。
+  "style": "classic",
+
+  // 控件显示规则。
+  // 优先级：旧版 show* 配置 < display.all < display.<当前 style>。
+  "display": {
+    // 所有样式共用的默认显示规则。
+    "all": {
+      "toolsLine": true,      // 工具调用统计行
+      "modelName": true,      // 模型名
+      "thinkingLevel": true,  // 思考等级
+      "projectName": true,    // 项目名
+      "gitBranch": true,      // Git 分支
+      "context": true,        // 上下文用量
+      "tokens": true,         // 词元总数
+      "tokenBreakdown": true, // 输入 / 输出 / 缓存 R/W 细分
+      "cacheRate": true,      // 缓存命中率
+      "elapsed": true,        // 会话耗时
+      "cost": true,           // 费用估算
+      "state": true,          // running / ready 状态
+      "turnDuration": true    // 每轮对话用时通知
+    },
+
+    // classic 样式专用覆盖；这里只写需要覆盖 all 的字段。
+    "classic": {
+      "toolsLine": true
+    },
+
+    // border 样式专用覆盖；这里只写需要覆盖 all 的字段。
+    "border": {
+      "toolsLine": true
+    }
+  },
+
+  // 上下文进度条宽度，范围会限制在 6..40。
+  "barWidth": 18,
+
+  // 工具统计最多显示多少个工具，范围会限制在 1..20。
+  "maxTools": 7
+}

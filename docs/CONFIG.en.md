@@ -34,18 +34,25 @@ Or:
 
 ## Example configuration
 
+For an annotated full example, see [examples/hud-footer.jsonc](../examples/hud-footer.jsonc).
+
 ```json
 {
   "enabled": true,
   "language": "auto",
   "style": "classic",
+  "display": {
+    "all": {
+      "toolsLine": false,
+      "modelName": true,
+      "turnDuration": true
+    },
+    "border": {
+      "toolsLine": true
+    }
+  },
   "barWidth": 18,
-  "showTools": true,
-  "maxTools": 7,
-  "showCost": true,
-  "showElapsed": true,
-  "showCacheRate": true,
-  "showTurnDuration": true
+  "maxTools": 7
 }
 ```
 
@@ -56,13 +63,29 @@ Or:
 | `enabled` | boolean | `true` | Enable the HUD footer when a session starts. |
 | `language` | string | `"auto"` | UI language. Supported values: `"auto"`, `"zh"`, `"en"`. `"auto"` selects Chinese or English from the system language and falls back to English for unsupported system languages or invalid configuration values. |
 | `style` | string | `"classic"` | HUD style. `"classic"`/`1` is the default classic three-line footer style; `"border"`/`2` is the editor-border style. You can also open a TUI selector to switch and save the style with `/hud-footer-theme`. |
+| `display` | object | `{}` | Widget visibility rules. `all` applies to every style, and `classic` / `border` override `all`. |
 | `barWidth` | number | `18` | Width of the context progress bar. Clamped to `6..40`. |
-| `showTools` | boolean | `true` | Show the tool call statistics line; when enabled, the line keeps a fixed height and shows `-` before any tool calls. |
 | `maxTools` | number | `7` | Maximum number of tools shown in the tool statistics summary. Clamped to `1..20`. |
-| `showCost` | boolean | `true` | Show estimated cost; in `border` style, it is embedded in the editor top border. |
-| `showElapsed` | boolean | `true` | Show elapsed session time; in `border` style, it is embedded in the editor top border. |
-| `showCacheRate` | boolean | `true` | Show token cache hit rate. |
-| `showTurnDuration` | boolean | `true` | Show a turn duration notification after each assistant turn. |
+
+## `display` rules
+
+Supports the `all`, `classic`, and `border` groups. Precedence: `display.all` < `display.<current style>`. Unset fields are visible by default.
+
+| Field | Description |
+|---|---|
+| `toolsLine` | Tool-call statistics line |
+| `modelName` | Model name |
+| `thinkingLevel` | Thinking level |
+| `projectName` | Project name |
+| `gitBranch` | Git branch |
+| `context` | Context usage |
+| `tokens` | Token total |
+| `tokenBreakdown` | Input / output / cache R/W breakdown |
+| `cacheRate` | Cache hit rate |
+| `elapsed` | Session elapsed time |
+| `cost` | Estimated cost |
+| `state` | running / ready state |
+| `turnDuration` | Per-turn duration notification |
 
 ## Style values
 
@@ -79,9 +102,11 @@ Or:
 |---|---|
 | `↑` | Input tokens |
 | `↓` | Output tokens |
-| `⇣` | Cache read tokens |
-| `⇡` | Cache write tokens |
+| `R` | Cache read tokens |
+| `W` | Cache write tokens |
 | `⚡` | Cache hit rate |
+
+`R` / `W` are hidden independently when their value is `0`.
 
 ## Cache hit rate formula
 

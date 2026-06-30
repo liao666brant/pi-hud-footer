@@ -1,5 +1,5 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { DEFAULT_CONFIG, loadConfig, normalizeStyle, saveConfigStyle } from "./hud-footer/config.ts";
+import { DEFAULT_CONFIG, isDisplayEnabled, loadConfig, normalizeStyle, saveConfigStyle } from "./hud-footer/config.ts";
 import { createHudEditorFactory } from "./hud-footer/editor.ts";
 import { fmtTurnDuration } from "./hud-footer/format.ts";
 import { getI18n } from "./hud-footer/i18n.ts";
@@ -50,7 +50,7 @@ export default function (pi: ExtensionAPI) {
 
 	function startRunningTimer(ctx: ExtensionContext) {
 		stopRunningTimer();
-		if (!config.showTurnDuration || ctx.mode !== "tui") return;
+		if (!isDisplayEnabled(config, "turnDuration") || ctx.mode !== "tui") return;
 		updateRunningMessage(ctx);
 		runningTimer = setInterval(() => updateRunningMessage(ctx), 1000);
 	}
@@ -129,7 +129,7 @@ export default function (pi: ExtensionAPI) {
 		if (elapsed !== undefined) lastTurnDuration = elapsed;
 		agentStartedAt = undefined;
 		stopRunningTimer(ctx);
-		if (config.showTurnDuration && elapsed !== undefined && ctx.hasUI) {
+		if (isDisplayEnabled(config, "turnDuration") && elapsed !== undefined && ctx.hasUI) {
 			const i18n = currentI18n();
 			const turnDuration = fmtTurnDuration(elapsed, i18n.language);
 			ctx.ui.notify(i18n.turnDurationNotification(turnDuration), "info");

@@ -2,11 +2,16 @@
   "enabled": true,
   "language": "auto",
   "style": "classic",
+  "display": {
+    "all": {
+      "toolsLine": false,
+      "modelName": true,
+      "turnDuration": true
+    },
+    "border": {
+      "toolsLine": true
+    }
+  },
   "barWidth": 18,
-  "showTools": true,
-  "maxTools": 7,
-  "showCost": true,
-  "showElapsed": true,
-  "showCacheRate": true,
-  "showTurnDuration": true
+  "maxTools": 7
 }

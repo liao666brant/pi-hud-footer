@@ -34,18 +34,25 @@
 
 ## 配置示例
 
+带注释的完整示例见：[examples/hud-footer.jsonc](../examples/hud-footer.jsonc)。
+
 ```json
 {
   "enabled": true,
   "language": "auto",
   "style": "classic",
+  "display": {
+    "all": {
+      "toolsLine": false,
+      "modelName": true,
+      "turnDuration": true
+    },
+    "border": {
+      "toolsLine": true
+    }
+  },
   "barWidth": 18,
-  "showTools": true,
-  "maxTools": 7,
-  "showCost": true,
-  "showElapsed": true,
-  "showCacheRate": true,
-  "showTurnDuration": true
+  "maxTools": 7
 }
 ```
 
@@ -56,13 +63,29 @@
 | `enabled` | boolean | `true` | 是否在会话启动时启用 HUD footer。 |
 | `language` | string | `"auto"` | 界面语言。可选 `"auto"`、`"zh"`、`"en"`；`"auto"` 会根据系统语言选择中文或英文，其他系统语言或无效配置回退英文。 |
 | `style` | string | `"classic"` | HUD 样式。`"classic"`/`1` 为默认经典 footer 三行样式；`"border"`/`2` 为输入框边框样式。TUI 中也可用 `/hud-footer-theme` 打开选择器切换并保存。 |
+| `display` | object | `{}` | 控件显示规则。`all` 对所有样式生效，`classic` / `border` 会覆盖 `all`。 |
 | `barWidth` | number | `18` | 上下文进度条宽度，会限制在 `6..40`。 |
-| `showTools` | boolean | `true` | 是否显示工具调用统计行；开启时该行会保持固定高度，暂无工具调用时显示 `-`。 |
 | `maxTools` | number | `7` | 工具统计最多显示多少个工具，会限制在 `1..20`。 |
-| `showCost` | boolean | `true` | 是否显示费用估算；在 `border` 样式下会嵌入输入框上边框。 |
-| `showElapsed` | boolean | `true` | 是否显示会话已用时间；在 `border` 样式下会嵌入输入框上边框。 |
-| `showCacheRate` | boolean | `true` | 是否显示词元缓存命中率。 |
-| `showTurnDuration` | boolean | `true` | 是否在每轮对话结束后显示本轮用时通知。 |
+
+## `display` 显示规则
+
+支持 `all`、`classic`、`border` 三个分组；优先级：`display.all` < `display.<当前样式>`。未配置的字段默认显示。
+
+| 字段 | 说明 |
+|---|---|
+| `toolsLine` | 工具调用统计行 |
+| `modelName` | 模型名 |
+| `thinkingLevel` | 思考等级 |
+| `projectName` | 项目名 |
+| `gitBranch` | Git 分支 |
+| `context` | 上下文进度 |
+| `tokens` | 词元总数 |
+| `tokenBreakdown` | 输入 / 输出 / 缓存 R/W 细分 |
+| `cacheRate` | 缓存命中率 |
+| `elapsed` | 会话耗时 |
+| `cost` | 费用估算 |
+| `state` | running / ready 状态 |
+| `turnDuration` | 每轮对话用时通知 |
 
 ## 样式取值
 
@@ -79,9 +102,11 @@
 |---|---|
 | `↑` | 输入词元 |
 | `↓` | 输出词元 |
-| `⇣` | 缓存读取词元 |
-| `⇡` | 缓存写入词元 |
+| `R` | 缓存读取词元 |
+| `W` | 缓存写入词元 |
 | `⚡` | 缓存命中率 |
+
+`R` / `W` 在对应数值为 `0` 时会分别隐藏。
 
 ## 缓存率计算方式
 

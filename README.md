@@ -77,12 +77,25 @@ pi install /path/to/pi-hud-footer
 
 完整配置说明见：[docs/CONFIG.md](docs/CONFIG.md) / [English](docs/CONFIG.en.md)
 
-示例配置：[examples/hud-footer.json](examples/hud-footer.json)
+示例配置：[examples/hud-footer.json](examples/hud-footer.json) / 带注释版：[examples/hud-footer.jsonc](examples/hud-footer.jsonc)
 
 | 配置层级 | 路径 | 说明 |
 |---|---|---|
 | 全局配置 | `~/.pi/agent/hud-footer.json` | 对所有会话生效。 |
 | 项目配置 | `.pi/hud-footer.json` | 仅在项目受信任时读取，并覆盖全局配置。 |
+
+### 配置项
+
+| 配置项 | 说明 |
+|---|---|
+| `enabled` | 是否启用 HUD footer。 |
+| `language` | 界面语言：`auto` / `zh` / `en`。 |
+| `style` | HUD 样式：`classic` / `border`。 |
+| `display` | 控件显示规则，支持全局和按样式覆盖。 |
+| `barWidth` | 上下文进度条宽度。 |
+| `maxTools` | 工具统计最多显示数量。 |
+
+`display` 支持 `all`、`classic`、`border` 分组，可配置：`toolsLine`、`modelName`、`thinkingLevel`、`projectName`、`gitBranch`、`context`、`tokens`、`tokenBreakdown`、`cacheRate`、`elapsed`、`cost`、`state`、`turnDuration`。
 
 修改配置后，在 pi 中执行：
 
@@ -104,9 +117,11 @@ pi install /path/to/pi-hud-footer
 |---|---|
 | `↑` | 输入词元 |
 | `↓` | 输出词元 |
-| `⇣` | 缓存读取词元 |
-| `⇡` | 缓存写入词元 |
+| `R` | 缓存读取词元 |
+| `W` | 缓存写入词元 |
 | `⚡` | 缓存命中率 |
+
+`R` / `W` 在对应数值为 `0` 时会分别隐藏。
 
 缓存命中率计算方式：
 

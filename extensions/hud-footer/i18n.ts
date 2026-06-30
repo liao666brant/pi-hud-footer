@@ -9,7 +9,7 @@ type FooterLabels = {
 	cost: string;
 	tools: string;
 	context: string;
-	tokenBreakdown(input: string, output: string, cacheRead: string, cacheWrite: string): string;
+	tokenBreakdown(input: string, output: string, cacheRead?: string, cacheWrite?: string): string;
 };
 
 type HudMessages = {
@@ -31,6 +31,12 @@ type HudMessages = {
 	};
 };
 
+function cacheBreakdown(cacheRead?: string, cacheWrite?: string): string {
+	return [cacheRead ? `R${cacheRead}` : undefined, cacheWrite ? `W${cacheWrite}` : undefined]
+		.filter(Boolean)
+		.join(" ");
+}
+
 const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 	en: {
 		labels: {
@@ -42,8 +48,10 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 			cost: "cost",
 			tools: "tools:",
 			context: "ctx",
-			tokenBreakdown: (input, output, cacheRead, cacheWrite) =>
-				`(in ${input} / out ${output} / cache R${cacheRead} W${cacheWrite})`,
+			tokenBreakdown: (input, output, cacheRead, cacheWrite) => {
+				const cache = cacheBreakdown(cacheRead, cacheWrite);
+				return cache ? `(in ${input} / out ${output} / cache ${cache})` : `(in ${input} / out ${output})`;
+			},
 		},
 		workingMessage: (turnDuration) => `Running · this turn ${turnDuration}`,
 		turnDurationNotification: (turnDuration) => `Turn duration ${turnDuration}`,
@@ -73,8 +81,10 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 			cost: "费用",
 			tools: "工具:",
 			context: "上下文",
-			tokenBreakdown: (input, output, cacheRead, cacheWrite) =>
-				`(输入 ${input} / 输出 ${output} / 缓存 R${cacheRead} W${cacheWrite})`,
+			tokenBreakdown: (input, output, cacheRead, cacheWrite) => {
+				const cache = cacheBreakdown(cacheRead, cacheWrite);
+				return cache ? `(输入 ${input} / 输出 ${output} / 缓存 ${cache})` : `(输入 ${input} / 输出 ${output})`;
+			},
 		},
 		workingMessage: (turnDuration) => `运行中 · 本轮用时 ${turnDuration}`,
 		turnDurationNotification: (turnDuration) => `本轮用时 ${turnDuration}`,

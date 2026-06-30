@@ -3,7 +3,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { normalizeLanguageSetting } from "./i18n.ts";
-import type { HudConfig, HudStyle } from "./types.ts";
+import {
+	HUD_DISPLAY_KEYS,
+	HUD_DISPLAY_SCOPES,
+	type HudConfig,
+	type HudDisplayConfig,
+	type HudDisplayKey,
+	type HudStyle,
+} from "./types.ts";
 
 const CONFIG_FILE_NAME = "hud-footer.json";
 
@@ -20,17 +27,21 @@ const STYLE_ALIASES: Record<string, HudStyle> = {
 	current: "border",
 };
 
+const LEGACY_DISPLAY_KEYS = {
+	showTools: "toolsLine",
+	showCacheRate: "cacheRate",
+	showElapsed: "elapsed",
+	showCost: "cost",
+	showTurnDuration: "turnDuration",
+} as const satisfies Record<string, HudDisplayKey>;
+
 export const DEFAULT_CONFIG: HudConfig = {
 	enabled: true,
 	language: "auto",
 	style: "classic",
+	display: {},
 	barWidth: 18,
-	showTools: true,
 	maxTools: 7,
-	showCost: true,
-	showElapsed: true,
-	showCacheRate: true,
-	showTurnDuration: true,
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -42,13 +53,32 @@ function clampInt(value: unknown, fallback: number, min: number, max: number): n
 	return Math.max(min, Math.min(max, Math.round(value)));
 }
 
-function booleanOption(value: unknown, fallback: boolean): boolean {
-	return typeof value === "boolean" ? value : fallback;
-}
-
 function mergeLanguage(base: HudConfig, patch: Record<string, unknown>): HudConfig["language"] {
 	if (!Object.hasOwn(patch, "language")) return base.language;
 	return normalizeLanguageSetting(patch.language) ?? "en";
+}
+
+function mergeDisplay(base: HudDisplayConfig, patch: Record<string, unknown>): HudDisplayConfig {
+	const next: HudDisplayConfig = {};
+	for (const scope of HUD_DISPLAY_SCOPES) {
+		if (base[scope]) next[scope] = { ...base[scope] };
+	}
+
+	for (const [legacyKey, displayKey] of Object.entries(LEGACY_DISPLAY_KEYS)) {
+		const value = patch[legacyKey];
+		if (typeof value === "boolean") next.all = { ...next.all, [displayKey]: value };
+	}
+
+	const display = patch.display;
+	for (const scope of HUD_DISPLAY_SCOPES) {
+		const patchScope = isObject(display) ? display[scope] : undefined;
+		if (!isObject(patchScope)) continue;
+		next[scope] = { ...next[scope] };
+		for (const key of HUD_DISPLAY_KEYS) {
+			if (typeof patchScope[key] === "boolean") next[scope][key] = patchScope[key];
+		}
+	}
+	return next;
 }
 
 export function normalizeStyle(value: unknown): HudStyle | undefined {
@@ -60,17 +90,22 @@ export function normalizeStyle(value: unknown): HudStyle | undefined {
 function mergeConfig(base: HudConfig, patch: unknown): HudConfig {
 	if (!isObject(patch)) return base;
 	return {
-		enabled: booleanOption(patch.enabled, base.enabled),
+		enabled: typeof patch.enabled === "boolean" ? patch.enabled : base.enabled,
 		language: mergeLanguage(base, patch),
 		style: normalizeStyle(patch.style) ?? base.style,
+		display: mergeDisplay(base.display, patch),
 		barWidth: clampInt(patch.barWidth, base.barWidth, 6, 40),
-		showTools: booleanOption(patch.showTools, base.showTools),
 		maxTools: clampInt(patch.maxTools, base.maxTools, 1, 20),
-		showCost: booleanOption(patch.showCost, base.showCost),
-		showElapsed: booleanOption(patch.showElapsed, base.showElapsed),
-		showCacheRate: booleanOption(patch.showCacheRate, base.showCacheRate),
-		showTurnDuration: booleanOption(patch.showTurnDuration, base.showTurnDuration),
 	};
+}
+
+export function isDisplayEnabled(config: HudConfig, key: HudDisplayKey): boolean {
+	let enabled = true;
+	const all = config.display.all?.[key];
+	const themed = config.display[config.style]?.[key];
+	if (typeof all === "boolean") enabled = all;
+	if (typeof themed === "boolean") enabled = themed;
+	return enabled;
 }
 
 function globalConfigPath(): string {

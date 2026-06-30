@@ -77,12 +77,25 @@ pi install /path/to/pi-hud-footer
 
 Full configuration reference: [docs/CONFIG.en.md](docs/CONFIG.en.md)
 
-Example configuration: [examples/hud-footer.json](examples/hud-footer.json)
+Example configuration: [examples/hud-footer.json](examples/hud-footer.json) / annotated JSONC: [examples/hud-footer.jsonc](examples/hud-footer.jsonc)
 
 | Level | Path | Notes |
 |---|---|---|
 | Global | `~/.pi/agent/hud-footer.json` | Applies to all sessions. |
 | Project | `.pi/hud-footer.json` | Read only when the project is trusted, and overrides global configuration. |
+
+### Options
+
+| Option | Description |
+|---|---|
+| `enabled` | Enable the HUD footer. |
+| `language` | UI language: `auto` / `zh` / `en`. |
+| `style` | HUD style: `classic` / `border`. |
+| `display` | Widget visibility rules, with global and per-style overrides. |
+| `barWidth` | Context progress bar width. |
+| `maxTools` | Maximum number of tools shown in the tool summary. |
+
+`display` supports the `all`, `classic`, and `border` groups. Available keys: `toolsLine`, `modelName`, `thinkingLevel`, `projectName`, `gitBranch`, `context`, `tokens`, `tokenBreakdown`, `cacheRate`, `elapsed`, `cost`, `state`, `turnDuration`.
 
 After changing configuration, run this in pi:
 
@@ -104,9 +117,11 @@ Token metrics use these icons:
 |---|---|
 | `↑` | Input tokens |
 | `↓` | Output tokens |
-| `⇣` | Cache read tokens |
-| `⇡` | Cache write tokens |
+| `R` | Cache read tokens |
+| `W` | Cache write tokens |
 | `⚡` | Cache hit rate |
+
+`R` / `W` are hidden independently when their value is `0`.
 
 Cache hit rate formula:
 
