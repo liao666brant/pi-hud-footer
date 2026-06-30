@@ -4,11 +4,16 @@ import { createHudEditorFactory } from "./hud-footer/editor.ts";
 import { fmtTurnDuration } from "./hud-footer/format.ts";
 import { getI18n } from "./hud-footer/i18n.ts";
 import { createHudFooter, type HudEditorState } from "./hud-footer/render.ts";
-import { collectStats } from "./hud-footer/stats.ts";
 import type { HudConfig, HudStyle } from "./hud-footer/types.ts";
 
 const ACTIVE_EXTENSION_KEY = Symbol.for("pi-hud-footer.active");
+const TOKEN_RATE_WINDOW_MS = 2000;
+const MIN_TOKEN_RATE_MS = 500;
+// ponytail: estimate streaming tokens from text deltas until providers expose live usage.
+const CHARS_PER_TOKEN = 4;
 type HudGlobal = typeof globalThis & { [ACTIVE_EXTENSION_KEY]?: boolean };
+type TokenRateSource = "usage" | "estimate";
+type TokenRateSample = { outputTokens: number; timestamp: number; source: TokenRateSource };
 
 export default function (pi: ExtensionAPI) {
 	const hudGlobal = globalThis as HudGlobal;
@@ -18,7 +23,8 @@ export default function (pi: ExtensionAPI) {
 	let runtimeEnabled: boolean | undefined;
 	let running = false;
 	let agentStartedAt: number | undefined;
-	let outputAtTurnStart = 0;
+	let tokenRateSample: TokenRateSample | undefined;
+	let estimatedOutputTokens = 0;
 	let lastTurnDuration: number | undefined;
 	let lastTokenRate: number | undefined;
 	let runningTimer: ReturnType<typeof setInterval> | undefined;
@@ -40,10 +46,6 @@ export default function (pi: ExtensionAPI) {
 		return running;
 	}
 
-	function outputTokens(ctx: ExtensionContext): number {
-		return collectStats(ctx).output;
-	}
-
 	function getLastTurnDuration(): number | undefined {
 		return lastTurnDuration;
 	}
@@ -52,10 +54,51 @@ export default function (pi: ExtensionAPI) {
 		return lastTokenRate;
 	}
 
-	function recordTurnMetrics(ctx: ExtensionContext, elapsed: number) {
-		lastTurnDuration = elapsed;
-		const output = Math.max(0, outputTokens(ctx) - outputAtTurnStart);
-		lastTokenRate = elapsed > 0 ? output / (elapsed / 1000) : undefined;
+	function setTokenRateSample(outputTokens: number, source: TokenRateSource, timestamp = Date.now()) {
+		tokenRateSample = { outputTokens, timestamp, source };
+	}
+
+	function resetTokenRate() {
+		estimatedOutputTokens = 0;
+		setTokenRateSample(0, "usage");
+		lastTokenRate = undefined;
+	}
+
+	function deltaTokensFromUpdate(update: unknown): number {
+		if (typeof update !== "object" || update === null || !("delta" in update)) return 0;
+		const delta = (update as { delta?: unknown }).delta;
+		if (typeof delta !== "string") return 0;
+		return delta.length / CHARS_PER_TOKEN;
+	}
+
+	function updateMessageTokenRate(message: { usage: { output: number } }, deltaTokens = 0) {
+		if (message.usage.output > 0) {
+			updateTokenRate(message.usage.output, "usage");
+			return;
+		}
+
+		estimatedOutputTokens += deltaTokens;
+		updateTokenRate(estimatedOutputTokens, "estimate");
+	}
+
+	function updateTokenRate(outputTokens: number, source: TokenRateSource) {
+		const now = Date.now();
+		if (!Number.isFinite(outputTokens)) return;
+		if (!tokenRateSample || source !== tokenRateSample.source || outputTokens < tokenRateSample.outputTokens) {
+			setTokenRateSample(outputTokens, source, now);
+			return;
+		}
+
+		const deltaTokens = outputTokens - tokenRateSample.outputTokens;
+		const deltaMs = now - tokenRateSample.timestamp;
+		if (deltaMs > TOKEN_RATE_WINDOW_MS) {
+			setTokenRateSample(outputTokens, source, now);
+			return;
+		}
+		if (deltaTokens <= 0 || deltaMs < MIN_TOKEN_RATE_MS) return;
+
+		lastTokenRate = deltaTokens / (deltaMs / 1000);
+		tokenRateSample = { outputTokens, timestamp: now, source };
 	}
 
 	function updateRunningMessage(ctx: ExtensionContext) {
@@ -157,21 +200,34 @@ export default function (pi: ExtensionAPI) {
 	}
 
 	pi.on("session_start", (_event, ctx) => {
-		lastTokenRate = undefined;
+		resetTokenRate();
 		applyHud(ctx);
 	});
 
 	pi.on("agent_start", (_event, ctx) => {
 		running = true;
 		agentStartedAt = Date.now();
-		outputAtTurnStart = outputTokens(ctx);
 		startRunningTimer(ctx);
+	});
+
+	pi.on("turn_start", () => {
+		resetTokenRate();
+	});
+
+	pi.on("message_update", (event) => {
+		if (event.message.role !== "assistant") return;
+		updateMessageTokenRate(event.message, deltaTokensFromUpdate(event.assistantMessageEvent));
+	});
+
+	pi.on("message_end", (event) => {
+		if (event.message.role !== "assistant") return;
+		updateMessageTokenRate(event.message);
 	});
 
 	pi.on("agent_end", (_event, ctx) => {
 		running = false;
 		const elapsed = agentStartedAt === undefined ? undefined : Date.now() - agentStartedAt;
-		if (elapsed !== undefined) recordTurnMetrics(ctx, elapsed);
+		if (elapsed !== undefined) lastTurnDuration = elapsed;
 		agentStartedAt = undefined;
 		stopRunningTimer(ctx);
 		if (isDisplayEnabled(config, "turnDuration") && elapsed !== undefined && ctx.hasUI) {

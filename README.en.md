@@ -123,7 +123,7 @@ Token metrics use these icons:
 
 `R` / `W` are hidden independently when their value is `0`.
 
-`tokenRate` shows the previous assistant turn's output tokens / turn duration.
+`tokenRate` shows the main agent's current streaming output rate, computed from output-token deltas over the last 0.5-2 seconds.
 
 Cache hit rate formula:
 

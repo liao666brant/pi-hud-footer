@@ -123,7 +123,7 @@ pi install /path/to/pi-hud-footer
 
 `R` / `W` 在对应数值为 `0` 时会分别隐藏。
 
-`tokenRate` 显示上一轮 assistant 输出词元数 / 本轮耗时。
+`tokenRate` 显示主 agent 当前流式输出速率，按最近 0.5～2 秒输出词元增量计算。
 
 缓存命中率计算方式：
 
