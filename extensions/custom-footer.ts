@@ -4,6 +4,7 @@ import { createHudEditorFactory } from "./hud-footer/editor.ts";
 import { fmtTurnDuration } from "./hud-footer/format.ts";
 import { getI18n } from "./hud-footer/i18n.ts";
 import { createHudFooter, type HudEditorState } from "./hud-footer/render.ts";
+import { collectStats } from "./hud-footer/stats.ts";
 import type { HudConfig, HudStyle } from "./hud-footer/types.ts";
 
 const ACTIVE_EXTENSION_KEY = Symbol.for("pi-hud-footer.active");
@@ -17,7 +18,9 @@ export default function (pi: ExtensionAPI) {
 	let runtimeEnabled: boolean | undefined;
 	let running = false;
 	let agentStartedAt: number | undefined;
+	let outputAtTurnStart = 0;
 	let lastTurnDuration: number | undefined;
+	let lastTokenRate: number | undefined;
 	let runningTimer: ReturnType<typeof setInterval> | undefined;
 	let config: HudConfig = { ...DEFAULT_CONFIG };
 	let editorInstalled = false;
@@ -31,6 +34,28 @@ export default function (pi: ExtensionAPI) {
 
 	function isEnabled(): boolean {
 		return runtimeEnabled ?? config.enabled;
+	}
+
+	function isRunning(): boolean {
+		return running;
+	}
+
+	function outputTokens(ctx: ExtensionContext): number {
+		return collectStats(ctx).output;
+	}
+
+	function getLastTurnDuration(): number | undefined {
+		return lastTurnDuration;
+	}
+
+	function getLastTokenRate(): number | undefined {
+		return lastTokenRate;
+	}
+
+	function recordTurnMetrics(ctx: ExtensionContext, elapsed: number) {
+		lastTurnDuration = elapsed;
+		const output = Math.max(0, outputTokens(ctx) - outputAtTurnStart);
+		lastTokenRate = elapsed > 0 ? output / (elapsed / 1000) : undefined;
 	}
 
 	function updateRunningMessage(ctx: ExtensionContext) {
@@ -59,7 +84,15 @@ export default function (pi: ExtensionAPI) {
 		if (ctx.mode !== "tui") return;
 		if (!editorInstalled) previousEditorFactory = ctx.ui.getEditorComponent();
 		ctx.ui.setEditorComponent(
-			createHudEditorFactory(pi, ctx, config, () => running, () => lastTurnDuration, editorState),
+			createHudEditorFactory(
+				pi,
+				ctx,
+				config,
+				isRunning,
+				getLastTurnDuration,
+				getLastTokenRate,
+				editorState,
+			),
 		);
 		editorInstalled = true;
 	}
@@ -86,7 +119,17 @@ export default function (pi: ExtensionAPI) {
 
 		if (config.style === "border") installEditor(ctx);
 		else uninstallEditor(ctx);
-		ctx.ui.setFooter(createHudFooter(pi, ctx, config, () => running, () => lastTurnDuration, editorState));
+		ctx.ui.setFooter(
+			createHudFooter(
+				pi,
+				ctx,
+				config,
+				isRunning,
+				getLastTurnDuration,
+				getLastTokenRate,
+				editorState,
+			),
+		);
 	}
 
 	function styleOptions(i18n = currentI18n()): string[] {
@@ -114,19 +157,21 @@ export default function (pi: ExtensionAPI) {
 	}
 
 	pi.on("session_start", (_event, ctx) => {
+		lastTokenRate = undefined;
 		applyHud(ctx);
 	});
 
 	pi.on("agent_start", (_event, ctx) => {
 		running = true;
 		agentStartedAt = Date.now();
+		outputAtTurnStart = outputTokens(ctx);
 		startRunningTimer(ctx);
 	});
 
 	pi.on("agent_end", (_event, ctx) => {
 		running = false;
 		const elapsed = agentStartedAt === undefined ? undefined : Date.now() - agentStartedAt;
-		if (elapsed !== undefined) lastTurnDuration = elapsed;
+		if (elapsed !== undefined) recordTurnMetrics(ctx, elapsed);
 		agentStartedAt = undefined;
 		stopRunningTimer(ctx);
 		if (isDisplayEnabled(config, "turnDuration") && elapsed !== undefined && ctx.hasUI) {

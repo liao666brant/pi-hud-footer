@@ -21,6 +21,7 @@
       "context": true,        // 上下文用量
       "tokens": true,         // 词元总数
       "tokenBreakdown": true, // 输入 / 输出 / 缓存 R/W 细分
+      "tokenRate": true,      // 上一轮输出词元每秒速率
       "cacheRate": true,      // 缓存命中率
       "elapsed": true,        // 会话耗时
       "cost": true,           // 费用估算

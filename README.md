@@ -9,7 +9,7 @@
 ## 功能亮点
 
 - 显示当前模型、思考等级、项目名和 git 分支
-- 显示上下文使用进度、词元用量、缓存读写和缓存命中率
+- 显示上下文使用进度、词元用量、输出速率、缓存读写和缓存命中率
 - 显示 running / ready 状态、会话耗时、费用估算和每轮用时
 - 显示工具调用统计，并保持 footer 高度稳定
 - 支持两套 HUD 样式：`classic` 经典 footer 样式和 `border` 输入框边框样式
@@ -95,7 +95,7 @@ pi install /path/to/pi-hud-footer
 | `barWidth` | 上下文进度条宽度。 |
 | `maxTools` | 工具统计最多显示数量。 |
 
-`display` 支持 `all`、`classic`、`border` 分组，可配置：`toolsLine`、`modelName`、`thinkingLevel`、`projectName`、`gitBranch`、`context`、`tokens`、`tokenBreakdown`、`cacheRate`、`elapsed`、`cost`、`state`、`turnDuration`。
+`display` 支持 `all`、`classic`、`border` 分组，可配置：`toolsLine`、`modelName`、`thinkingLevel`、`projectName`、`gitBranch`、`context`、`tokens`、`tokenBreakdown`、`tokenRate`、`cacheRate`、`elapsed`、`cost`、`state`、`turnDuration`。
 
 修改配置后，在 pi 中执行：
 
@@ -122,6 +122,8 @@ pi install /path/to/pi-hud-footer
 | `⚡` | 缓存命中率 |
 
 `R` / `W` 在对应数值为 `0` 时会分别隐藏。
+
+`tokenRate` 显示上一轮 assistant 输出词元数 / 本轮耗时。
 
 缓存命中率计算方式：
 

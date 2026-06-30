@@ -9,7 +9,7 @@ It keeps model, context, token, cache, cost, tool-call, and running-state inform
 ## Highlights
 
 - Shows the current model, thinking level, project name, and git branch
-- Shows context usage, token usage, cache read/write tokens, and cache hit rate
+- Shows context usage, token usage, output rate, cache read/write tokens, and cache hit rate
 - Shows running / ready state, session elapsed time, estimated cost, and turn duration
 - Shows tool-call statistics while keeping footer height stable
 - Supports two HUD styles: `classic` footer style and `border` editor-border style
@@ -95,7 +95,7 @@ Example configuration: [examples/hud-footer.json](examples/hud-footer.json) / an
 | `barWidth` | Context progress bar width. |
 | `maxTools` | Maximum number of tools shown in the tool summary. |
 
-`display` supports the `all`, `classic`, and `border` groups. Available keys: `toolsLine`, `modelName`, `thinkingLevel`, `projectName`, `gitBranch`, `context`, `tokens`, `tokenBreakdown`, `cacheRate`, `elapsed`, `cost`, `state`, `turnDuration`.
+`display` supports the `all`, `classic`, and `border` groups. Available keys: `toolsLine`, `modelName`, `thinkingLevel`, `projectName`, `gitBranch`, `context`, `tokens`, `tokenBreakdown`, `tokenRate`, `cacheRate`, `elapsed`, `cost`, `state`, `turnDuration`.
 
 After changing configuration, run this in pi:
 
@@ -122,6 +122,8 @@ Token metrics use these icons:
 | `⚡` | Cache hit rate |
 
 `R` / `W` are hidden independently when their value is `0`.
+
+`tokenRate` shows the previous assistant turn's output tokens / turn duration.
 
 Cache hit rate formula:
 

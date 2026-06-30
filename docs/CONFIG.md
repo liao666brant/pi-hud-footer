@@ -45,6 +45,7 @@
     "all": {
       "toolsLine": false,
       "modelName": true,
+      "tokenRate": true,
       "turnDuration": true
     },
     "border": {
@@ -81,6 +82,7 @@
 | `context` | 上下文进度 |
 | `tokens` | 词元总数 |
 | `tokenBreakdown` | 输入 / 输出 / 缓存 R/W 细分 |
+| `tokenRate` | 上一轮输出词元每秒速率 |
 | `cacheRate` | 缓存命中率 |
 | `elapsed` | 会话耗时 |
 | `cost` | 费用估算 |
@@ -107,6 +109,8 @@
 | `⚡` | 缓存命中率 |
 
 `R` / `W` 在对应数值为 `0` 时会分别隐藏。
+
+`tokenRate` 显示上一轮 assistant 输出词元数 / 本轮耗时。
 
 ## 缓存率计算方式
 

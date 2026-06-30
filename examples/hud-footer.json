@@ -6,6 +6,7 @@
     "all": {
       "toolsLine": false,
       "modelName": true,
+      "tokenRate": true,
       "turnDuration": true
     },
     "border": {

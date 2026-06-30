@@ -45,6 +45,7 @@ For an annotated full example, see [examples/hud-footer.jsonc](../examples/hud-f
     "all": {
       "toolsLine": false,
       "modelName": true,
+      "tokenRate": true,
       "turnDuration": true
     },
     "border": {
@@ -81,6 +82,7 @@ Supports the `all`, `classic`, and `border` groups. Precedence: `display.all` < 
 | `context` | Context usage |
 | `tokens` | Token total |
 | `tokenBreakdown` | Input / output / cache R/W breakdown |
+| `tokenRate` | Last-turn output tokens per second |
 | `cacheRate` | Cache hit rate |
 | `elapsed` | Session elapsed time |
 | `cost` | Estimated cost |
@@ -107,6 +109,8 @@ Supports the `all`, `classic`, and `border` groups. Precedence: `display.all` < 
 | `⚡` | Cache hit rate |
 
 `R` / `W` are hidden independently when their value is `0`.
+
+`tokenRate` shows the previous assistant turn's output tokens / turn duration.
 
 ## Cache hit rate formula
 

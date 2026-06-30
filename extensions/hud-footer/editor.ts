@@ -152,6 +152,7 @@ export function createHudEditorFactory(
 	config: HudConfig,
 	isRunning: () => boolean,
 	getLastTurnDuration: () => number | undefined,
+	getLastTokenRate: () => number | undefined,
 	state: HudEditorState,
 ): EditorFactory {
 	return (tui, theme, keybindings) =>
@@ -160,6 +161,13 @@ export function createHudEditorFactory(
 			theme,
 			keybindings,
 			() => renderHudTopBorderSegments(pi, ctx, config, ctx.ui.theme, () => state.getGitBranch?.()),
-			() => renderHudBottomBorderSegments(ctx, config, isRunning, getLastTurnDuration, ctx.ui.theme),
+			() => renderHudBottomBorderSegments(
+				ctx,
+				config,
+				isRunning,
+				getLastTurnDuration,
+				getLastTokenRate,
+				ctx.ui.theme,
+			),
 		);
 }

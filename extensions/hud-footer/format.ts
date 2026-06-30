@@ -13,6 +13,12 @@ export function fmtPercent(value: number): string {
 	return `${Math.round(value * 100)}%`;
 }
 
+export function fmtTokenRate(value: number): string {
+	if (!Number.isFinite(value) || value <= 0) return "0/s";
+	const tokens = value < 10 ? value.toFixed(1).replace(/\.0$/, "") : fmtTokens(value);
+	return `${tokens}/s`;
+}
+
 export function fmtDuration(ms: number, language: HudLanguage = "en"): string {
 	if (!Number.isFinite(ms) || ms < 0) {
 		return language === "zh" ? "0分" : "0m";

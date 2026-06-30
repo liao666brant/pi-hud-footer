@@ -4,6 +4,7 @@ type FooterLabels = {
 	ready: string;
 	running: string;
 	tokens: string;
+	tokenRate: string;
 	cacheRate: string;
 	elapsed: string;
 	cost: string;
@@ -43,6 +44,7 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 			ready: "✓ ready",
 			running: "● running",
 			tokens: "Tokens:",
+			tokenRate: "rate",
 			cacheRate: "cache hit",
 			elapsed: "elapsed",
 			cost: "cost",
@@ -76,6 +78,7 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 			ready: "✓ 就绪",
 			running: "● 运行中",
 			tokens: "词元:",
+			tokenRate: "速率",
 			cacheRate: "缓存率",
 			elapsed: "耗时",
 			cost: "费用",

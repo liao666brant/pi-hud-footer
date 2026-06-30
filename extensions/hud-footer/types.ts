@@ -16,6 +16,7 @@ export const HUD_DISPLAY_KEYS = [
 	"context",
 	"tokens",
 	"tokenBreakdown",
+	"tokenRate",
 	"cacheRate",
 	"elapsed",
 	"cost",

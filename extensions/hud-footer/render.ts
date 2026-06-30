@@ -2,7 +2,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { basename } from "node:path";
 import { isDisplayEnabled } from "./config.ts";
-import { fmtDuration, fmtPercent, fmtTokens, fmtTurnDuration, shortModel } from "./format.ts";
+import { fmtDuration, fmtPercent, fmtTokenRate, fmtTokens, fmtTurnDuration, shortModel } from "./format.ts";
 import { getI18n } from "./i18n.ts";
 import { collectStats, TOOL_ORDER } from "./stats.ts";
 import type { ColorName, HudConfig, HudLanguage, HudStats } from "./types.ts";
@@ -66,6 +66,12 @@ function visibleCacheTokens(stats: HudStats): { read?: string; write?: string } 
 		read: stats.cacheRead > 0 ? fmtTokens(stats.cacheRead) : undefined,
 		write: stats.cacheWrite > 0 ? fmtTokens(stats.cacheWrite) : undefined,
 	};
+}
+
+function tokenRateText(rate: number | undefined, theme: Theme, label?: string): string | undefined {
+	if (rate === undefined) return undefined;
+	const text = fmtTokenRate(rate);
+	return theme.fg("muted", label ? `${label} ${text}` : text);
 }
 
 function sessionElapsed(stats: HudStats, language: HudLanguage): string {
@@ -161,11 +167,17 @@ function toolLine(stats: HudStats, theme: Theme, width: number, config: HudConfi
 	return truncateToWidth(joinParts([" ", theme.fg("muted", label), summary]), width);
 }
 
-function renderHudTokenSegment(ctx: ExtensionContext, config: HudConfig, theme: Theme): string | undefined {
+function renderHudTokenSegment(
+	ctx: ExtensionContext,
+	config: HudConfig,
+	getLastTokenRate: () => number | undefined,
+	theme: Theme,
+): string | undefined {
 	const i18n = getI18n(config.language);
 	const stats = collectStats(ctx);
 	const metrics = tokenMetrics(stats);
 	const cacheColor = cacheRateColor(metrics.cacheRate);
+	const rate = getLastTokenRate();
 	const cacheTokens = visibleCacheTokens(stats);
 	const tokenBreakdown = joinParts([
 		`↑${fmtTokens(stats.input)}`,
@@ -179,9 +191,10 @@ function renderHudTokenSegment(ctx: ExtensionContext, config: HudConfig, theme: 
 	const breakdown = isDisplayEnabled(config, "tokenBreakdown")
 		? theme.fg("dim", tokenBreakdown)
 		: undefined;
+	const tokenRate = isDisplayEnabled(config, "tokenRate") ? tokenRateText(rate, theme) : undefined;
 	const cache = isDisplayEnabled(config, "cacheRate") ? theme.fg(cacheColor, `⚡${fmtPercent(metrics.cacheRate)}`) : undefined;
 
-	return joinWithSeparator([total, breakdown, cache], theme.fg("dim", " · ")) || undefined;
+	return joinWithSeparator([total, breakdown, tokenRate, cache], theme.fg("dim", " · ")) || undefined;
 }
 
 export function renderHudTopBorderSegments(
@@ -210,6 +223,7 @@ export function renderHudBottomBorderSegments(
 	config: HudConfig,
 	isRunning: () => boolean,
 	getLastTurnDuration: () => number | undefined,
+	getLastTokenRate: () => number | undefined,
 	theme: Theme,
 ): HudBorderSegments {
 	const i18n = getI18n(config.language);
@@ -225,7 +239,7 @@ export function renderHudBottomBorderSegments(
 		left: isDisplayEnabled(config, "context")
 			? joinParts([theme.fg("muted", i18n.labels.context), bar, contextText])
 			: undefined,
-		center: renderHudTokenSegment(ctx, config, theme),
+		center: renderHudTokenSegment(ctx, config, getLastTokenRate, theme),
 		right: isDisplayEnabled(config, "state")
 			? stateText(i18n, theme, isRunning, getLastTurnDuration())
 			: undefined,
@@ -245,6 +259,7 @@ function renderClassicFooterLines(
 	config: HudConfig,
 	isRunning: () => boolean,
 	getLastTurnDuration: () => number | undefined,
+	getLastTokenRate: () => number | undefined,
 	theme: Theme,
 	width: number,
 	getGitBranch: () => string | null | undefined,
@@ -255,6 +270,7 @@ function renderClassicFooterLines(
 	const context = contextMetrics(ctx);
 	const tokens = tokenMetrics(stats);
 	const cacheColor = cacheRateColor(tokens.cacheRate);
+	const rate = getLastTokenRate();
 	const cacheTokens = visibleCacheTokens(stats);
 	const elapsed = sessionElapsed(stats, i18n.language);
 	const tokenBreakdown = i18n.labels.tokenBreakdown(
@@ -278,14 +294,16 @@ function renderClassicFooterLines(
 	const contextSegment = isDisplayEnabled(config, "context") ? joinParts([bar, contextText]) : undefined;
 	const git = locationText(ctx, branch, config, theme, true);
 	const state = isDisplayEnabled(config, "state") ? stateText(i18n, theme, isRunning, getLastTurnDuration()) : undefined;
+	const showTokens = isDisplayEnabled(config, "tokens");
 	const tokenSummary = joinParts([
-		isDisplayEnabled(config, "tokens") ? theme.fg("muted", i18n.labels.tokens) : undefined,
-		isDisplayEnabled(config, "tokens") ? theme.fg("text", fmtTokens(tokens.total)) : undefined,
+		showTokens ? theme.fg("muted", i18n.labels.tokens) : undefined,
+		showTokens ? theme.fg("text", fmtTokens(tokens.total)) : undefined,
 		isDisplayEnabled(config, "tokenBreakdown") ? theme.fg("dim", tokenBreakdown) : undefined,
 	]) || undefined;
 	const cacheRate = isDisplayEnabled(config, "cacheRate")
 		? theme.fg(cacheColor, `${i18n.labels.cacheRate} ${fmtPercent(tokens.cacheRate)}`)
 		: undefined;
+	const tokenRate = isDisplayEnabled(config, "tokenRate") ? tokenRateText(rate, theme, i18n.labels.tokenRate) : undefined;
 	const elapsedText = isDisplayEnabled(config, "elapsed")
 		? theme.fg("muted", `${i18n.labels.elapsed} ${elapsed}`)
 		: undefined;
@@ -294,7 +312,7 @@ function renderClassicFooterLines(
 		: undefined;
 
 	const line1Body = joinWithSeparator([joinParts([topLeft, contextSegment]) || undefined, git, state], theme.fg("dim", " | "));
-	const line2Body = joinWithSeparator([tokenSummary, cacheRate, elapsedText, costText], theme.fg("dim", " | "));
+	const line2Body = joinWithSeparator([tokenSummary, tokenRate, cacheRate, elapsedText, costText], theme.fg("dim", " | "));
 	const lines = [line1Body, line2Body]
 		.filter(Boolean)
 		.map((line) => truncateToWidth(joinParts([" ", line]), width));
@@ -309,6 +327,7 @@ export function createHudFooter(
 	config: HudConfig,
 	isRunning: () => boolean,
 	getLastTurnDuration: () => number | undefined,
+	getLastTokenRate: () => number | undefined,
 	editorState?: HudEditorState,
 ): FooterFactory {
 	return (tui, theme, footerData) => {
@@ -326,6 +345,7 @@ export function createHudFooter(
 						config,
 						isRunning,
 						getLastTurnDuration,
+						getLastTokenRate,
 						theme,
 						width,
 						() => footerData.getGitBranch(),
