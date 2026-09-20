@@ -9,8 +9,10 @@ It keeps model, context, token, cache, cost, tool-call, and running-state inform
 ## Highlights
 
 - Shows the current model, thinking level, project name, and git branch
-- Shows context usage, token usage, output rate, cache read/write tokens, and cache hit rate
+- Shows context usage, cumulative token usage scoped to the session tree or active branch, output rate, cache read/write tokens, and cache hit rate
+- Supports aggregate or latest-request cache hit rates
 - Shows running / ready state, session elapsed time, and estimated cost; turn duration notifications are opt-in
+- Displays costs in USD or CNY, with a customizable USD-to-CNY rate that defaults to `6.8`
 - Shows tool-call statistics while keeping footer height stable
 - Supports two HUD styles: `classic` footer style and `border` editor-border style
 - Supports Chinese and English UI text, selected automatically from the system language by default
@@ -93,8 +95,12 @@ Example configuration: [examples/hud-footer.json](examples/hud-footer.json) / an
 | `language` | UI language: `auto` / `zh` / `en`. |
 | `style` | HUD style: `classic` / `border`. |
 | `display` | Widget visibility rules, with global and per-style overrides. |
+| `cacheRateMode` | Cache hit rate: aggregate (`total`) or latest request (`latest`). Defaults to `total`. |
+| `currency` | Cost display currency: `USD` / `CNY`. Defaults to `USD`. |
+| `exchangeRate` | USD-to-CNY exchange rate. Defaults to `6.8` (1 USD = 6.8 CNY). |
 | `barWidth` | Context progress bar width. |
 | `maxTools` | Maximum number of tools shown in the tool summary. |
+| `usageScope` | Cumulative token and cost scope: active branch (`branch`) or complete session tree (`session`). Defaults to `branch`. |
 
 `display` supports the `all`, `classic`, and `border` groups. Available keys: `toolsLine`, `modelName`, `thinkingLevel`, `projectName`, `gitBranch`, `context`, `tokens`, `tokenBreakdown`, `tokenRate`, `cacheRate`, `elapsed`, `cost`, `state`, `turnDuration`.
 
@@ -126,9 +132,11 @@ Token metrics use these icons:
 
 `R` / `W` are hidden independently when their value is `0`.
 
+`usageScope` determines whether ↑/↓/R/W and cost accumulate over the complete session tree or the active branch. The `session` mode includes assistant messages, tool results with usage, compactions, and branch summaries. Context usage and tool statistics remain scoped to the effective context and active branch, respectively.
+
 `tokenRate` shows the main agent's current streaming output rate, computed from output-token deltas over the last 0.5-2 seconds.
 
-Cache hit rate formula:
+`cacheRateMode` selects either the latest assistant request on the active branch (`latest`) or aggregate active-branch usage (`total`). Cache hit rate formula:
 
 ```txt
 cacheRead / (input + cacheRead + cacheWrite)

@@ -1,5 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import type { HudLanguage } from "./types.ts";
+import type { HudConfig, HudLanguage } from "./types.ts";
 
 export function fmtTokens(value: number): string {
 	if (!Number.isFinite(value) || value <= 0) return "0";
@@ -17,6 +17,12 @@ export function fmtTokenRate(value: number): string {
 	if (!Number.isFinite(value) || value <= 0) return "0/s";
 	const tokens = value < 10 ? value.toFixed(1).replace(/\.0$/, "") : fmtTokens(value);
 	return `${tokens}/s`;
+}
+
+export function fmtCost(usdCost: number, config: Pick<HudConfig, "currency" | "exchangeRate">): string {
+	const safeUsdCost = Number.isFinite(usdCost) && usdCost > 0 ? usdCost : 0;
+	if (config.currency === "CNY") return `¥${(safeUsdCost * config.exchangeRate).toFixed(2)}`;
+	return `$${safeUsdCost.toFixed(2)}`;
 }
 
 export function fmtDuration(ms: number, language: HudLanguage = "en"): string {

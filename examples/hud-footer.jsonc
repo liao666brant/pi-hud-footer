@@ -8,6 +8,15 @@
   // HUD 样式："classic" 经典 footer；"border" 输入框边框。
   "style": "classic",
 
+  // 缓存命中率模式："total" 使用当前分支累计值；"latest" 使用当前分支最近一次 assistant 请求。
+  "cacheRateMode": "total",
+
+  // 费用显示货币："USD" 美元；"CNY" 人民币。
+  "currency": "USD",
+
+  // 美元兑人民币汇率：1 USD = exchangeRate CNY，仅在 currency 为 "CNY" 时用于换算。
+  "exchangeRate": 6.8,
+
   // 控件显示规则。
   // 优先级：旧版 show* 配置 < display.all < display.<当前 style>。
   "display": {
@@ -44,5 +53,9 @@
   "barWidth": 18,
 
   // 工具统计最多显示多少个工具，范围会限制在 1..20。
-  "maxTools": 7
+  "maxTools": 7,
+
+  // 累计用量范围："branch" 仅统计当前分支；"session" 统计完整会话树。
+  // 同时控制输入、输出、缓存 R/W 和费用，默认 "branch"。
+  "usageScope": "branch"
 }

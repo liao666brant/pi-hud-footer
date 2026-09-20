@@ -7,6 +7,7 @@ import {
 	HUD_DISPLAY_KEYS,
 	HUD_DISPLAY_SCOPES,
 	type HudConfig,
+	type HudCurrency,
 	type HudDisplayConfig,
 	type HudDisplayKey,
 	type HudStyle,
@@ -27,6 +28,9 @@ const STYLE_ALIASES: Record<string, HudStyle> = {
 	current: "border",
 };
 
+const CURRENCIES = new Set<HudCurrency>(["USD", "CNY"]);
+const CACHE_RATE_MODES = new Set<HudConfig["cacheRateMode"]>(["total", "latest"]);
+
 const LEGACY_DISPLAY_KEYS = {
 	showTools: "toolsLine",
 	showCacheRate: "cacheRate",
@@ -35,13 +39,19 @@ const LEGACY_DISPLAY_KEYS = {
 	showTurnDuration: "turnDuration",
 } as const satisfies Record<string, HudDisplayKey>;
 
+const USAGE_SCOPES = new Set<HudConfig["usageScope"]>(["session", "branch"]);
+
 export const DEFAULT_CONFIG: HudConfig = {
 	enabled: true,
 	language: "auto",
 	style: "classic",
 	display: { all: { turnDuration: false } },
+	cacheRateMode: "total",
+	currency: "USD",
+	exchangeRate: 6.8,
 	barWidth: 18,
 	maxTools: 7,
+	usageScope: "branch",
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -56,6 +66,22 @@ function clampInt(value: unknown, fallback: number, min: number, max: number): n
 function mergeLanguage(base: HudConfig, patch: Record<string, unknown>): HudConfig["language"] {
 	if (!Object.hasOwn(patch, "language")) return base.language;
 	return normalizeLanguageSetting(patch.language) ?? "en";
+}
+
+function normalizeCurrency(value: unknown): HudCurrency | undefined {
+	if (typeof value !== "string") return undefined;
+	const currency = value.trim().toUpperCase() as HudCurrency;
+	return CURRENCIES.has(currency) ? currency : undefined;
+}
+
+function normalizeCacheRateMode(value: unknown): HudConfig["cacheRateMode"] | undefined {
+	if (typeof value !== "string") return undefined;
+	const mode = value.trim().toLowerCase() as HudConfig["cacheRateMode"];
+	return CACHE_RATE_MODES.has(mode) ? mode : undefined;
+}
+
+function positiveNumber(value: unknown, fallback: number): number {
+	return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
 function mergeDisplay(base: HudDisplayConfig, patch: Record<string, unknown>): HudDisplayConfig {
@@ -87,6 +113,12 @@ export function normalizeStyle(value: unknown): HudStyle | undefined {
 	return STYLE_ALIASES[value.trim().toLowerCase()];
 }
 
+function normalizeUsageScope(value: unknown): HudConfig["usageScope"] | undefined {
+	if (typeof value !== "string") return undefined;
+	const scope = value.trim().toLowerCase() as HudConfig["usageScope"];
+	return USAGE_SCOPES.has(scope) ? scope : undefined;
+}
+
 function mergeConfig(base: HudConfig, patch: unknown): HudConfig {
 	if (!isObject(patch)) return base;
 	return {
@@ -94,8 +126,12 @@ function mergeConfig(base: HudConfig, patch: unknown): HudConfig {
 		language: mergeLanguage(base, patch),
 		style: normalizeStyle(patch.style) ?? base.style,
 		display: mergeDisplay(base.display, patch),
+		cacheRateMode: normalizeCacheRateMode(patch.cacheRateMode) ?? base.cacheRateMode,
+		currency: normalizeCurrency(patch.currency) ?? base.currency,
+		exchangeRate: positiveNumber(patch.exchangeRate, base.exchangeRate),
 		barWidth: clampInt(patch.barWidth, base.barWidth, 6, 40),
 		maxTools: clampInt(patch.maxTools, base.maxTools, 1, 20),
+		usageScope: normalizeUsageScope(patch.usageScope) ?? base.usageScope,
 	};
 }
 

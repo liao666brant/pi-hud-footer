@@ -2,6 +2,9 @@
   "enabled": true,
   "language": "auto",
   "style": "classic",
+  "cacheRateMode": "total",
+  "currency": "USD",
+  "exchangeRate": 6.8,
   "display": {
     "all": {
       "toolsLine": false,
@@ -14,5 +17,6 @@
     }
   },
   "barWidth": 18,
-  "maxTools": 7
+  "maxTools": 7,
+  "usageScope": "branch"
 }

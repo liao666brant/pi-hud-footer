@@ -2,7 +2,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { basename } from "node:path";
 import { isDisplayEnabled } from "./config.ts";
-import { fmtDuration, fmtPercent, fmtTokenRate, fmtTokens, fmtTurnDuration, shortModel } from "./format.ts";
+import { fmtCost, fmtDuration, fmtPercent, fmtTokenRate, fmtTokens, fmtTurnDuration, shortModel } from "./format.ts";
 import { getI18n } from "./i18n.ts";
 import { collectStats, TOOL_ORDER } from "./stats.ts";
 import type { ColorName, HudConfig, HudLanguage, HudStats } from "./types.ts";
@@ -52,12 +52,13 @@ function cacheRateColor(rate: number): ColorName {
 	return "dim";
 }
 
-function tokenMetrics(stats: HudStats) {
+function tokenMetrics(stats: HudStats, cacheRateMode: HudConfig["cacheRateMode"]) {
 	const inputTotal = stats.input + stats.cacheRead + stats.cacheWrite;
+	const totalCacheRate = inputTotal > 0 ? stats.cacheRead / inputTotal : 0;
 	return {
 		inputTotal,
 		total: inputTotal + stats.output,
-		cacheRate: inputTotal > 0 ? stats.cacheRead / inputTotal : 0,
+		cacheRate: cacheRateMode === "latest" ? stats.latestCacheHitRate ?? 0 : totalCacheRate,
 	};
 }
 
@@ -174,8 +175,8 @@ function renderHudTokenSegment(
 	theme: Theme,
 ): string | undefined {
 	const i18n = getI18n(config.language);
-	const stats = collectStats(ctx);
-	const metrics = tokenMetrics(stats);
+	const stats = collectStats(ctx, config.usageScope);
+	const metrics = tokenMetrics(stats, config.cacheRateMode);
 	const cacheColor = cacheRateColor(metrics.cacheRate);
 	const rate = getLastTokenRate();
 	const cacheTokens = visibleCacheTokens(stats);
@@ -207,11 +208,11 @@ export function renderHudTopBorderSegments(
 	const i18n = getI18n(config.language);
 	const branch = getGitBranch();
 	const model = modelText(pi, ctx, config, theme);
-	const stats = collectStats(ctx);
+	const stats = collectStats(ctx, config.usageScope);
 	const elapsed = sessionElapsed(stats, i18n.language);
 	const runMetrics = joinWithSeparator([
 		isDisplayEnabled(config, "elapsed") ? theme.fg("muted", `${i18n.labels.elapsed} ${elapsed}`) : undefined,
-		isDisplayEnabled(config, "cost") ? theme.fg("muted", `${i18n.labels.cost} $${stats.cost.toFixed(2)}`) : undefined,
+		isDisplayEnabled(config, "cost") ? theme.fg("muted", `${i18n.labels.cost} ${fmtCost(stats.cost, config)}`) : undefined,
 	], theme.fg("dim", " | "));
 	const location = locationText(ctx, branch, config, theme);
 
@@ -248,7 +249,7 @@ export function renderHudBottomBorderSegments(
 
 function renderBorderFooterLines(ctx: ExtensionContext, config: HudConfig, theme: Theme, width: number): string[] {
 	const i18n = getI18n(config.language);
-	const stats = collectStats(ctx);
+	const stats = collectStats(ctx, config.usageScope);
 	const tools = toolLine(stats, theme, width, config, i18n.labels.tools);
 	return tools ? [tools] : [];
 }
@@ -265,10 +266,10 @@ function renderClassicFooterLines(
 	getGitBranch: () => string | null | undefined,
 ): string[] {
 	const i18n = getI18n(config.language);
-	const stats = collectStats(ctx);
+	const stats = collectStats(ctx, config.usageScope);
 	const branch = getGitBranch();
 	const context = contextMetrics(ctx);
-	const tokens = tokenMetrics(stats);
+	const tokens = tokenMetrics(stats, config.cacheRateMode);
 	const cacheColor = cacheRateColor(tokens.cacheRate);
 	const rate = getLastTokenRate();
 	const cacheTokens = visibleCacheTokens(stats);
@@ -308,7 +309,7 @@ function renderClassicFooterLines(
 		? theme.fg("muted", `${i18n.labels.elapsed} ${elapsed}`)
 		: undefined;
 	const costText = isDisplayEnabled(config, "cost")
-		? theme.fg("muted", `${i18n.labels.cost} $${stats.cost.toFixed(2)}`)
+		? theme.fg("muted", `${i18n.labels.cost} ${fmtCost(stats.cost, config)}`)
 		: undefined;
 
 	const line1Body = joinWithSeparator([joinParts([topLeft, contextSegment]) || undefined, git, state], theme.fg("dim", " | "));

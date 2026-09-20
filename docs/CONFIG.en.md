@@ -41,6 +41,9 @@ For an annotated full example, see [examples/hud-footer.jsonc](../examples/hud-f
   "enabled": true,
   "language": "auto",
   "style": "classic",
+  "cacheRateMode": "total",
+  "currency": "USD",
+  "exchangeRate": 6.8,
   "display": {
     "all": {
       "toolsLine": false,
@@ -53,7 +56,8 @@ For an annotated full example, see [examples/hud-footer.jsonc](../examples/hud-f
     }
   },
   "barWidth": 18,
-  "maxTools": 7
+  "maxTools": 7,
+  "usageScope": "branch"
 }
 ```
 
@@ -65,8 +69,41 @@ For an annotated full example, see [examples/hud-footer.jsonc](../examples/hud-f
 | `language` | string | `"auto"` | UI language. Supported values: `"auto"`, `"zh"`, `"en"`. `"auto"` selects Chinese or English from the system language and falls back to English for unsupported system languages or invalid configuration values. You can also use `/hud-footer-language` to open the TUI selector. |
 | `style` | string | `"classic"` | HUD style. `"classic"`/`1` is the default classic three-line footer style; `"border"`/`2` is the editor-border style. You can also open a TUI selector to switch and save the style with `/hud-footer-theme`. |
 | `display` | object | `{}` | Widget visibility rules. `all` applies to every style, and `classic` / `border` override `all`. |
+| `cacheRateMode` | string | `"total"` | Cache hit rate mode. `"total"` uses cumulative active-branch usage; `"latest"` uses the latest assistant request on the active branch. Case-insensitive. |
+| `currency` | string | `"USD"` | Cost display currency. Supported values: `"USD"` and `"CNY"`, case-insensitive. |
+| `exchangeRate` | number | `6.8` | USD-to-CNY exchange rate (the amount of CNY per 1 USD). Must be a finite number greater than `0`; used only when `currency` is `"CNY"`. |
 | `barWidth` | number | `18` | Width of the context progress bar. Clamped to `6..40`. |
 | `maxTools` | number | `7` | Maximum number of tools shown in the tool statistics summary. Clamped to `1..20`. |
+| `usageScope` | string | `"branch"` | Scope for cumulative API usage and cost. `"branch"` includes only the active branch; `"session"` includes the complete session tree. Case-insensitive. |
+
+## Cumulative usage and cost
+
+`usageScope` controls the cumulative scope of input, output, cache R/W, and cost together:
+
+- `"branch"`: accumulates only the active path from the root to the current leaf. This is the default to preserve the existing statistics behavior.
+- `"session"`: traverses the complete session tree and accumulates usage and cost from assistant messages, tool results with usage, compactions, and branch summaries.
+
+These token values are cumulative API usage that has already occurred; they are not the tokens still present in the current context. Context usage always comes from pi's current effective context, while tool-call statistics always remain scoped to the active branch. Neither is affected by `usageScope`.
+
+## Cache hit rate
+
+`cacheRateMode` selects the cache hit rate source:
+
+- `"total"`: calculates an aggregate rate from cumulative input and cache usage within `usageScope`. This is the default to preserve the existing display behavior.
+- `"latest"`: uses the latest assistant request on the active branch.
+
+Both modes use `cacheRead / (input + cacheRead + cacheWrite)`. `"latest"` displays `0%` when no applicable assistant request is available.
+
+## Cost currency and exchange rate
+
+Pi reports cost statistics in USD, and `usageScope` controls the cumulative cost scope. With `currency` set to `"USD"`, the extension displays that value directly. With `currency` set to `"CNY"`, it displays `USD cost × exchangeRate` in CNY. For example:
+
+```json
+{
+  "currency": "CNY",
+  "exchangeRate": 7.2
+}
+```
 
 ## `display` rules
 
@@ -120,4 +157,4 @@ Supports the `all`, `classic`, and `border` groups. Precedence: `display.all` < 
 cacheRead / (input + cacheRead + cacheWrite)
 ```
 
-Meaning: cached input tokens / total input-side tokens.
+Meaning: cached input tokens / total input-side tokens. `cacheRateMode` determines the data scope used by the formula.
