@@ -69,7 +69,7 @@ For an annotated full example, see [examples/hud-footer.jsonc](../examples/hud-f
 | `language` | string | `"auto"` | UI language. Supported values: `"auto"`, `"zh"`, `"en"`. `"auto"` selects Chinese or English from the system language and falls back to English for unsupported system languages or invalid configuration values. You can also use `/hud-footer-language` to open the TUI selector. |
 | `style` | string | `"classic"` | HUD style. `"classic"`/`1` is the default classic three-line footer style; `"border"`/`2` is the editor-border style. You can also open a TUI selector to switch and save the style with `/hud-footer-theme`. |
 | `display` | object | `{}` | Widget visibility rules. `all` applies to every style, and `classic` / `border` override `all`. |
-| `cacheRateMode` | string | `"total"` | Cache hit rate mode. `"total"` uses cumulative active-branch usage; `"latest"` uses the latest assistant request on the active branch. Case-insensitive. |
+| `cacheRateMode` | string | `"total"` | Cache hit rate mode. `"total"` uses the cumulative usage within `usageScope`; `"latest"` uses the last assistant request in that scope. Case-insensitive. |
 | `currency` | string | `"USD"` | Cost display currency. Supported values: `"USD"` and `"CNY"`, case-insensitive. |
 | `exchangeRate` | number | `6.8` | USD-to-CNY exchange rate (the amount of CNY per 1 USD). Must be a finite number greater than `0`; used only when `currency` is `"CNY"`. |
 | `barWidth` | number | `18` | Width of the context progress bar. Clamped to `6..40`. |
@@ -80,8 +80,8 @@ For an annotated full example, see [examples/hud-footer.jsonc](../examples/hud-f
 
 `usageScope` controls the cumulative scope of input, output, cache R/W, and cost together:
 
-- `"branch"`: accumulates only the active path from the root to the current leaf. This is the default to preserve the existing statistics behavior.
-- `"session"`: traverses the complete session tree and accumulates usage and cost from assistant messages, tool results with usage, compactions, and branch summaries.
+- `"branch"`: accumulates only the active path from the root to the current leaf. This is the default to preserve the existing statistics behavior, and it counts less than pi's built-in footer, which always totals the complete session tree.
+- `"session"`: traverses the complete session tree and accumulates usage and cost from assistant messages, tool results with usage, usage records such as cache warming, compactions, and branch summaries. This matches pi's built-in footer.
 
 These token values are cumulative API usage that has already occurred; they are not the tokens still present in the current context. Context usage always comes from pi's current effective context, while tool-call statistics always remain scoped to the active branch. Neither is affected by `usageScope`.
 
@@ -90,7 +90,7 @@ These token values are cumulative API usage that has already occurred; they are 
 `cacheRateMode` selects the cache hit rate source:
 
 - `"total"`: calculates an aggregate rate from cumulative input and cache usage within `usageScope`. This is the default to preserve the existing display behavior.
-- `"latest"`: uses the latest assistant request on the active branch.
+- `"latest"`: uses the last assistant request in the `usageScope` range; `"session"` takes the last one in session file order, `"branch"` the last one on the active branch.
 
 Both modes use `cacheRead / (input + cacheRead + cacheWrite)`. `"latest"` displays `0%` when no applicable assistant request is available.
 

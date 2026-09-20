@@ -132,11 +132,11 @@ Token metrics use these icons:
 
 `R` / `W` are hidden independently when their value is `0`.
 
-`usageScope` determines whether ↑/↓/R/W and cost accumulate over the complete session tree or the active branch. The `session` mode includes assistant messages, tool results with usage, compactions, and branch summaries. Context usage and tool statistics remain scoped to the effective context and active branch, respectively.
+`usageScope` determines whether ↑/↓/R/W and cost accumulate over the complete session tree or the active branch. The `session` mode includes assistant messages, tool results with usage, usage records such as cache warming, compactions, and branch summaries. Context usage and tool statistics remain scoped to the effective context and active branch, respectively.
 
 `tokenRate` shows the main agent's current streaming output rate, computed from output-token deltas over the last 0.5-2 seconds.
 
-`cacheRateMode` selects either the latest assistant request on the active branch (`latest`) or aggregate active-branch usage (`total`). Cache hit rate formula:
+`cacheRateMode` selects either the latest assistant request (`latest`) or aggregate usage (`total`) within the active scope; `latest` uses the last assistant request in that scope, `total` the cumulative value. Cache hit rate formula:
 
 ```txt
 cacheRead / (input + cacheRead + cacheWrite)

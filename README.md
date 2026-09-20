@@ -132,11 +132,11 @@ pi install /path/to/pi-hud-footer
 
 `R` / `W` 在对应数值为 `0` 时会分别隐藏。
 
-`usageScope` 决定 ↑/↓/R/W 与费用是累计完整会话树还是当前分支；`session` 会计入 assistant、带 usage 的 toolResult、compaction 和 branch summary。上下文进度和工具统计仍分别使用当前有效上下文与当前分支。
+`usageScope` 决定 ↑/↓/R/W 与费用是累计完整会话树还是当前分支；`session` 会计入 assistant、带 usage 的 toolResult、usage 记录（如缓存预热）、compaction 和 branch summary。上下文进度和工具统计仍分别使用当前有效上下文与当前分支。
 
 `tokenRate` 显示主 agent 当前流式输出速率，按最近 0.5～2 秒输出词元增量计算。
 
-`cacheRateMode` 可选择当前分支最近一次 assistant 请求（`latest`）或当前分支累计值（`total`）。缓存命中率计算方式：
+`cacheRateMode` 可选择最近一次 assistant 请求（`latest`）或累计值（`total`）；`latest` 取当前统计范围内最后一条 assistant 请求，`total` 取当前统计范围的累计值。缓存命中率计算方式：
 
 ```txt
 cacheRead / (input + cacheRead + cacheWrite)

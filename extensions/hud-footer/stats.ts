@@ -6,6 +6,11 @@ const statsCache = new WeakMap<object, { key: string; stats: HudStats }>();
 
 type UsageTotals = Pick<HudStats, "input" | "output" | "cacheRead" | "cacheWrite" | "cost">;
 
+interface SessionUsage {
+	totals: UsageTotals;
+	latestCacheHitRate: number | undefined;
+}
+
 function createUsageTotals(): UsageTotals {
 	return {
 		input: 0,
@@ -87,25 +92,32 @@ function collectBranchStats(entries: SessionEntry[]): HudStats {
 	return stats;
 }
 
-function collectSessionUsage(entries: SessionEntry[]): UsageTotals {
-	const total = createUsageTotals();
+function collectSessionUsage(entries: SessionEntry[]): SessionUsage {
+	const totals = createUsageTotals();
+	let latestCacheHitRate: number | undefined;
 
 	for (const entry of entries) {
 		let usage: UsageTotals | undefined;
 
-		if (entry.type === "message") {
+		if (entry.type === "usage") {
+			usage = normalizeUsage(entry.usage);
+		} else if (entry.type === "message") {
 			const message: unknown = entry.message;
 			if (isRecord(message) && (message.role === "assistant" || message.role === "toolResult")) {
 				usage = normalizeUsage(message.usage);
+				if (usage && message.role === "assistant") {
+					const promptTokens = usage.input + usage.cacheRead + usage.cacheWrite;
+					latestCacheHitRate = promptTokens > 0 ? usage.cacheRead / promptTokens : undefined;
+				}
 			}
 		} else if (entry.type === "compaction" || entry.type === "branch_summary") {
 			usage = normalizeUsage((entry as unknown as Record<string, unknown>).usage);
 		}
 
-		if (usage) addUsage(total, usage);
+		if (usage) addUsage(totals, usage);
 	}
 
-	return total;
+	return { totals, latestCacheHitRate };
 }
 
 function statsCacheKey(branch: SessionEntry[], entries: SessionEntry[] | undefined, usageScope: HudUsageScope): string {
@@ -127,7 +139,17 @@ export function collectStats(ctx: ExtensionContext, usageScope: HudUsageScope): 
 	if (cached?.key === key) return cached.stats;
 
 	const branchStats = collectBranchStats(branch);
-	const stats = entries ? { ...branchStats, ...collectSessionUsage(entries) } : branchStats;
+	if (!entries) {
+		statsCache.set(ctx, { key, stats: branchStats });
+		return branchStats;
+	}
+
+	const sessionUsage = collectSessionUsage(entries);
+	const stats: HudStats = {
+		...branchStats,
+		...sessionUsage.totals,
+		latestCacheHitRate: sessionUsage.latestCacheHitRate,
+	};
 
 	statsCache.set(ctx, { key, stats });
 	return stats;
