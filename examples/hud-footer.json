@@ -7,7 +7,7 @@
       "toolsLine": false,
       "modelName": true,
       "tokenRate": true,
-      "turnDuration": true
+      "turnDuration": false
     },
     "border": {
       "toolsLine": true

@@ -87,7 +87,9 @@ Supports the `all`, `classic`, and `border` groups. Precedence: `display.all` < 
 | `elapsed` | Session elapsed time |
 | `cost` | Estimated cost |
 | `state` | running / ready state |
-| `turnDuration` | Per-turn duration notification |
+| `turnDuration` | Per-turn duration notification, disabled by default to avoid conflicts with other extensions |
+
+`turnDuration` is disabled by default. Set it to `true` under `display.all` or the relevant style to enable per-turn duration notifications.
 
 ## Style values
 

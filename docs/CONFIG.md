@@ -87,7 +87,9 @@
 | `elapsed` | 会话耗时 |
 | `cost` | 费用估算 |
 | `state` | running / ready 状态 |
-| `turnDuration` | 每轮对话用时通知 |
+| `turnDuration` | 每轮对话用时通知，默认关闭以避免与其他插件重复 |
+
+`turnDuration` 默认关闭。如需启用每轮用时通知，请在 `display.all` 或对应样式中设置为 `true`。
 
 ## 样式取值
 

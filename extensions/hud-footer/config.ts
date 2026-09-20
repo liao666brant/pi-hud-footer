@@ -39,7 +39,7 @@ export const DEFAULT_CONFIG: HudConfig = {
 	enabled: true,
 	language: "auto",
 	style: "classic",
-	display: {},
+	display: { all: { turnDuration: false } },
 	barWidth: 18,
 	maxTools: 7,
 };

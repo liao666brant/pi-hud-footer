@@ -10,7 +10,7 @@
 
 - 显示当前模型、思考等级、项目名和 git 分支
 - 显示上下文使用进度、词元用量、输出速率、缓存读写和缓存命中率
-- 显示 running / ready 状态、会话耗时、费用估算和每轮用时
+- 显示 running / ready 状态、会话耗时和费用估算；每轮用时通知可选开启
 - 显示工具调用统计，并保持 footer 高度稳定
 - 支持两套 HUD 样式：`classic` 经典 footer 样式和 `border` 输入框边框样式
 - 支持中文/英文界面，默认根据系统语言自动选择
@@ -96,6 +96,8 @@ pi install /path/to/pi-hud-footer
 | `maxTools` | 工具统计最多显示数量。 |
 
 `display` 支持 `all`、`classic`、`border` 分组，可配置：`toolsLine`、`modelName`、`thinkingLevel`、`projectName`、`gitBranch`、`context`、`tokens`、`tokenBreakdown`、`tokenRate`、`cacheRate`、`elapsed`、`cost`、`state`、`turnDuration`。
+
+`turnDuration` 默认关闭，避免与其他插件提供的每轮耗时通知重复；需要时将其设置为 `true`。
 
 修改配置后，在 pi 中执行：
 
