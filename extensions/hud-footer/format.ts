@@ -3,9 +3,11 @@ import type { HudConfig, HudLanguage } from "./types.ts";
 
 export function fmtTokens(value: number): string {
 	if (!Number.isFinite(value) || value <= 0) return "0";
-	if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 1 : 2)}M`;
-	if (value >= 1_000) return `${(value / 1_000).toFixed(value >= 100_000 ? 0 : 1)}K`;
-	return `${Math.round(value)}`;
+	if (value < 1_000) return `${Math.round(value)}`;
+	if (value < 10_000) return `${(value / 1_000).toFixed(1)}k`;
+	if (value < 1_000_000) return `${Math.round(value / 1_000)}k`;
+	if (value < 10_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+	return `${Math.round(value / 1_000_000)}M`;
 }
 
 export function fmtPercent(value: number): string {
@@ -19,10 +21,22 @@ export function fmtTokenRate(value: number): string {
 	return `${tokens}/s`;
 }
 
-export function fmtCost(usdCost: number, config: Pick<HudConfig, "currency" | "exchangeRate">): string {
+export function fmtCost(usdCost: number, config: Pick<HudConfig, "currency" | "exchangeRate">, subscription = false): string {
 	const safeUsdCost = Number.isFinite(usdCost) && usdCost > 0 ? usdCost : 0;
-	if (config.currency === "CNY") return `¥${(safeUsdCost * config.exchangeRate).toFixed(2)}`;
-	return `$${safeUsdCost.toFixed(2)}`;
+	const amount = config.currency === "CNY" ? `¥${(safeUsdCost * config.exchangeRate).toFixed(3)}` : `$${safeUsdCost.toFixed(3)}`;
+	return subscription ? `${amount} (sub)` : amount;
+}
+
+/**
+ * Whether the active model is billed through a subscription rather than per token.
+ * Mirrors pi's built-in footer, which also treats Kimi Coding as subscription-backed.
+ */
+export function isSubscriptionModel(ctx: ExtensionContext): boolean {
+	const model = ctx.model;
+	if (!model) return false;
+	if (model.provider === "kimi-coding") return true;
+	if (!ctx.modelRegistry.isUsingOAuth(model)) return false;
+	return ctx.modelRegistry.getProvider(model.provider)?.auth.oauth?.isSubscription === true;
 }
 
 export function fmtDuration(ms: number, language: HudLanguage = "en"): string {

@@ -96,7 +96,7 @@
 
 ## 费用货币与汇率
 
-pi 提供的费用统计以 USD 计价。费用的累计范围由 `usageScope` 控制。`currency` 为 `"USD"` 时直接显示美元；为 `"CNY"` 时，插件按 `USD 费用 × exchangeRate` 换算并显示人民币。例如：
+pi 提供的费用统计以 USD 计价。费用的累计范围由 `usageScope` 控制。`currency` 为 `"USD"` 时直接显示美元；为 `"CNY"` 时，插件按 `USD 费用 × exchangeRate` 换算并显示人民币。显示格式与 pi 官方 footer 一致：保留 3 位小数，订阅制 provider 的费用后附加 `(sub)`。例如：
 
 ```json
 {
@@ -127,6 +127,8 @@ pi 提供的费用统计以 USD 计价。费用的累计范围由 `usageScope` �
 | `turnDuration` | 每轮对话用时通知，默认关闭以避免与其他插件重复 |
 
 `turnDuration` 默认关闭。如需启用每轮用时通知，请在 `display.all` 或对应样式中设置为 `true`。
+
+上下文进度在压缩刚结束、下一次响应到达之前无法确定，此时按 pi 官方 footer 的做法显示 `?/<上下文窗口>`，并隐藏进度条。
 
 ## 样式取值
 

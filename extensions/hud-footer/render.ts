@@ -2,7 +2,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { basename } from "node:path";
 import { isDisplayEnabled } from "./config.ts";
-import { fmtCost, fmtDuration, fmtPercent, fmtTokenRate, fmtTokens, fmtTurnDuration, shortModel } from "./format.ts";
+import { fmtCost, fmtDuration, fmtPercent, fmtTokenRate, fmtTokens, fmtTurnDuration, isSubscriptionModel, shortModel } from "./format.ts";
 import { getI18n } from "./i18n.ts";
 import { collectStats, TOOL_ORDER } from "./stats.ts";
 import type { ColorName, HudConfig, HudLanguage, HudStats } from "./types.ts";
@@ -80,10 +80,19 @@ function sessionElapsed(stats: HudStats, language: HudLanguage): string {
 }
 
 function contextMetrics(ctx: ExtensionContext) {
-	const contextWindow = ctx.model?.contextWindow;
-	const tokens = ctx.getContextUsage()?.tokens ?? 0;
-	const ratio = contextWindow ? tokens / contextWindow : 0;
-	return { contextWindow, tokens, ratio, color: contextUsageColor(ratio) };
+	const usage = ctx.getContextUsage();
+	const contextWindow = usage?.contextWindow ?? ctx.model?.contextWindow;
+	// pi reports null tokens right after compaction, until the next response arrives.
+	const tokens = usage ? usage.tokens : 0;
+	const ratio = contextWindow && tokens !== null ? tokens / contextWindow : 0;
+	return { contextWindow, tokens, ratio, color: tokens === null ? "dim" : contextUsageColor(ratio) };
+}
+
+function contextText(context: ReturnType<typeof contextMetrics>, style: "border" | "classic"): string {
+	const window = fmtTokens(context.contextWindow ?? 0);
+	if (context.tokens === null) return `?/${window}`;
+	const used = `${fmtTokens(context.tokens)}/${window}`;
+	return `${fmtPercent(context.ratio)} ${style === "classic" ? `(${used})` : used}`;
 }
 
 function stateText(
@@ -212,7 +221,7 @@ export function renderHudTopBorderSegments(
 	const elapsed = sessionElapsed(stats, i18n.language);
 	const runMetrics = joinWithSeparator([
 		isDisplayEnabled(config, "elapsed") ? theme.fg("muted", `${i18n.labels.elapsed} ${elapsed}`) : undefined,
-		isDisplayEnabled(config, "cost") ? theme.fg("muted", `${i18n.labels.cost} ${fmtCost(stats.cost, config)}`) : undefined,
+		isDisplayEnabled(config, "cost") ? theme.fg("muted", `${i18n.labels.cost} ${fmtCost(stats.cost, config, isSubscriptionModel(ctx))}`) : undefined,
 	], theme.fg("dim", " | "));
 	const location = locationText(ctx, branch, config, theme);
 
@@ -230,15 +239,14 @@ export function renderHudBottomBorderSegments(
 	const i18n = getI18n(config.language);
 	const context = contextMetrics(ctx);
 	const barWidth = Math.min(config.barWidth, 12);
-	const bar = contextBar(context.ratio, barWidth, (s) => theme.fg(context.color, s), (s) => theme.fg("dim", s));
-	const contextText = theme.fg(
-		context.color,
-		`${fmtPercent(context.ratio)} ${fmtTokens(context.tokens)}/${fmtTokens(context.contextWindow ?? 0)}`,
-	);
+	const bar = context.tokens === null
+		? undefined
+		: contextBar(context.ratio, barWidth, (s) => theme.fg(context.color, s), (s) => theme.fg("dim", s));
+	const contextValue = theme.fg(context.color, contextText(context, "border"));
 
 	return {
 		left: isDisplayEnabled(config, "context")
-			? joinParts([theme.fg("muted", i18n.labels.context), bar, contextText])
+			? joinParts([theme.fg("muted", i18n.labels.context), bar, contextValue])
 			: undefined,
 		center: renderHudTokenSegment(ctx, config, getLastTokenRate, theme),
 		right: isDisplayEnabled(config, "state")
@@ -281,18 +289,17 @@ function renderClassicFooterLines(
 		cacheTokens.write,
 	);
 	const topLeft = modelText(pi, ctx, config, theme, true);
-	const bar = contextBar(
-		context.ratio,
-		config.barWidth,
-		(s) => theme.fg(context.color, s),
-		(s) => theme.fg("dim", s),
-		{ filled: "█", empty: "░" },
-	);
-	const contextText = theme.fg(
-		context.color,
-		`${fmtPercent(context.ratio)} (${fmtTokens(context.tokens)}/${fmtTokens(context.contextWindow ?? 0)})`,
-	);
-	const contextSegment = isDisplayEnabled(config, "context") ? joinParts([bar, contextText]) : undefined;
+	const bar = context.tokens === null
+		? undefined
+		: contextBar(
+			context.ratio,
+			config.barWidth,
+			(s) => theme.fg(context.color, s),
+			(s) => theme.fg("dim", s),
+			{ filled: "█", empty: "░" },
+		);
+	const contextValue = theme.fg(context.color, contextText(context, "classic"));
+	const contextSegment = isDisplayEnabled(config, "context") ? joinParts([bar, contextValue]) : undefined;
 	const git = locationText(ctx, branch, config, theme, true);
 	const state = isDisplayEnabled(config, "state") ? stateText(i18n, theme, isRunning, getLastTurnDuration()) : undefined;
 	const showTokens = isDisplayEnabled(config, "tokens");
@@ -309,7 +316,7 @@ function renderClassicFooterLines(
 		? theme.fg("muted", `${i18n.labels.elapsed} ${elapsed}`)
 		: undefined;
 	const costText = isDisplayEnabled(config, "cost")
-		? theme.fg("muted", `${i18n.labels.cost} ${fmtCost(stats.cost, config)}`)
+		? theme.fg("muted", `${i18n.labels.cost} ${fmtCost(stats.cost, config, isSubscriptionModel(ctx))}`)
 		: undefined;
 
 	const line1Body = joinWithSeparator([joinParts([topLeft, contextSegment]) || undefined, git, state], theme.fg("dim", " | "));

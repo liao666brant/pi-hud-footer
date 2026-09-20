@@ -96,7 +96,7 @@ Both modes use `cacheRead / (input + cacheRead + cacheWrite)`. `"latest"` displa
 
 ## Cost currency and exchange rate
 
-Pi reports cost statistics in USD, and `usageScope` controls the cumulative cost scope. With `currency` set to `"USD"`, the extension displays that value directly. With `currency` set to `"CNY"`, it displays `USD cost × exchangeRate` in CNY. For example:
+Pi reports cost statistics in USD, and `usageScope` controls the cumulative cost scope. With `currency` set to `"USD"`, the extension displays that value directly. With `currency` set to `"CNY"`, it displays `USD cost × exchangeRate` in CNY. The format matches pi's built-in footer: three decimals, plus a `(sub)` marker for subscription-backed providers. For example:
 
 ```json
 {
@@ -127,6 +127,8 @@ Supports the `all`, `classic`, and `border` groups. Precedence: `display.all` < 
 | `turnDuration` | Per-turn duration notification, disabled by default to avoid conflicts with other extensions |
 
 `turnDuration` is disabled by default. Set it to `true` under `display.all` or the relevant style to enable per-turn duration notifications.
+
+Right after a compaction and before the next response arrives, context usage is unknown. As in pi's built-in footer, the HUD then shows `?/<context window>` and hides the progress bar.
 
 ## Style values
 
