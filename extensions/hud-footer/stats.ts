@@ -3,6 +3,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { HudStats } from "./types.ts";
 
 export const TOOL_ORDER = ["edit", "write", "bash", "read", "grep", "find", "ls"];
+const statsCache = new WeakMap<object, { key: string; stats: HudStats }>();
 
 function timestampToMs(value: unknown): number | undefined {
 	if (typeof value === "number") return value;
@@ -18,6 +19,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function collectStats(ctx: ExtensionContext): HudStats {
+	const branch = ctx.sessionManager.getBranch();
+	const last = branch[branch.length - 1] as { id?: unknown; timestamp?: unknown } | undefined;
+	const key = String(branch.length) + ":" + String(last?.id) + ":" + String(last?.timestamp);
+	const cached = statsCache.get(ctx);
+	if (cached?.key === key) return cached.stats;
+
 	const stats: HudStats = {
 		input: 0,
 		output: 0,
@@ -27,7 +34,7 @@ export function collectStats(ctx: ExtensionContext): HudStats {
 		tools: new Map(),
 	};
 
-	for (const entry of ctx.sessionManager.getBranch()) {
+	for (const entry of branch) {
 		const entryTime = timestampToMs((entry as { timestamp?: unknown }).timestamp);
 		if (entryTime !== undefined) stats.startedAt = Math.min(stats.startedAt ?? entryTime, entryTime);
 
@@ -55,5 +62,6 @@ export function collectStats(ctx: ExtensionContext): HudStats {
 		}
 	}
 
+	statsCache.set(ctx, { key, stats });
 	return stats;
 }

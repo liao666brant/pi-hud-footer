@@ -19,34 +19,6 @@ function stripAnsi(text: string): string {
 	return text.replace(ANSI_PATTERN, "");
 }
 
-function isEditorBorderLine(line: string): boolean {
-	const plain = stripAnsi(line);
-	if (!plain.includes("─")) return false;
-	return plain.replace(/[─\s↑↓0-9more]/g, "").length === 0;
-}
-
-function findTopBorderIndex(lines: string[]): number {
-	for (let index = 0; index < lines.length; index++) {
-		const plain = stripAnsi(lines[index] ?? "");
-		if (!isEditorBorderLine(lines[index] ?? "")) continue;
-		// Keep pi's built-in scroll-up hint visible for very long prompts.
-		if (plain.includes("↑")) return -1;
-		return index;
-	}
-	return -1;
-}
-
-function findBottomBorderIndex(lines: string[]): number {
-	for (let index = lines.length - 1; index >= 0; index--) {
-		const plain = stripAnsi(lines[index] ?? "");
-		if (!isEditorBorderLine(lines[index] ?? "")) continue;
-		// Keep pi's built-in scroll-down hint visible for very long prompts.
-		if (plain.includes("↓")) return -1;
-		return index;
-	}
-	return -1;
-}
-
 function rawLabelWidth(text: string | undefined): number {
 	return text ? visibleWidth(text) + 2 : 0;
 }
@@ -117,6 +89,21 @@ function embeddedBorderLine(
 	return line;
 }
 
+function hudBorderWithScroll(
+	segments: HudBorderSegments,
+	base: string,
+	width: number,
+	borderColor: (value: string) => string,
+): string | undefined {
+	const scroll = stripAnsi(base).match(/[↑↓]\s*\d+\s+more/)?.[0];
+	if (!scroll) return embeddedBorderLine(segments, width, borderColor);
+	return embeddedBorderLine(
+		{ ...segments, center: [segments.center, scroll].filter(Boolean).join(" ") },
+		width,
+		borderColor,
+	);
+}
+
 class HudEditor extends CustomEditor {
 	constructor(
 		tui: Tui,
@@ -128,21 +115,14 @@ class HudEditor extends CustomEditor {
 		super(tui, theme, keybindings);
 	}
 
-	override render(width: number): string[] {
-		const lines = super.render(width);
-		const topBorderIndex = findTopBorderIndex(lines);
-		if (topBorderIndex !== -1) {
-			const border = embeddedBorderLine(this.renderTop(), width, this.borderColor);
-			if (border) lines[topBorderIndex] = border;
-		}
+	protected override renderTopBorder(width: number, hiddenLineCount: number): string {
+		const base = super.renderTopBorder(width, hiddenLineCount);
+		return hudBorderWithScroll(this.renderTop(), base, width, this.borderColor) ?? base;
+	}
 
-		const bottomBorderIndex = findBottomBorderIndex(lines);
-		if (bottomBorderIndex !== -1 && bottomBorderIndex !== topBorderIndex) {
-			const border = embeddedBorderLine(this.renderBottom(), width, this.borderColor);
-			if (border) lines[bottomBorderIndex] = border;
-		}
-
-		return lines;
+	protected override renderBottomBorder(width: number, hiddenLineCount: number): string {
+		const base = super.renderBottomBorder(width, hiddenLineCount);
+		return hudBorderWithScroll(this.renderBottom(), base, width, this.borderColor) ?? base;
 	}
 }
 
