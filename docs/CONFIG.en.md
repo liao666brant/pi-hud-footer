@@ -70,7 +70,7 @@ For an annotated full example, see [examples/hud-footer.jsonc](../examples/hud-f
 | `style` | string | `"classic"` | HUD style. `"classic"`/`1` is the default classic three-line footer style; `"border"`/`2` is the editor-border style. You can also open a TUI selector to switch and save the style with `/hud-footer-theme`. |
 | `display` | object | `{}` | Widget visibility rules. `all` applies to every style, and `classic` / `border` override `all`. |
 | `cacheRateMode` | string | `"total"` | Cache hit rate mode. `"total"` uses the cumulative usage within `usageScope`; `"latest"` uses the last assistant request in that scope. Case-insensitive. |
-| `currency` | string | `"USD"` | Cost display currency. Supported values: `"USD"` and `"CNY"`, case-insensitive. |
+| `currency` | string | `"USD"` | Cost display currency. Supported values: `"USD"` and `"CNY"`, case-insensitive. You can also use `/hud-footer-currency` to open the TUI selector. |
 | `exchangeRate` | number | `6.8` | USD-to-CNY exchange rate (the amount of CNY per 1 USD). Must be a finite number greater than `0`; used only when `currency` is `"CNY"`. |
 | `barWidth` | number | `18` | Width of the context progress bar. Clamped to `6..40`. |
 | `maxTools` | number | `7` | Maximum number of tools shown in the tool statistics summary. Clamped to `1..20`. |
@@ -105,6 +105,8 @@ Pi reports cost statistics in USD, and `usageScope` controls the cumulative cost
 }
 ```
 
+In the TUI, `/hud-footer-currency` opens a selector that switches and saves `currency`. The exchange rate stays a config-file setting; the selector never changes it.
+
 ## `display` rules
 
 Supports the `all`, `classic`, and `border` groups. Precedence: `display.all` < `display.<current style>`. Unset fields are visible by default.
@@ -137,7 +139,7 @@ Right after a compaction and before the next response arrives, context usage is 
 | `classic` / `1` | Default theme. Classic three-line footer style, suitable for users who prefer the previous layout. |
 | `border` / `2` | Editor-border style. Embeds stable HUD information into the input editor borders while keeping tool statistics in the footer line to avoid dynamic footer-height changes. |
 
-`/hud-footer-theme` switches and saves the style. If the current trusted project already has `.pi/hud-footer.json`, it writes to the project config; otherwise it writes to the global config at `~/.pi/agent/hud-footer.json`.
+`/hud-footer-theme`, `/hud-footer-language`, and `/hud-footer-currency` switch and save their setting. If the current trusted project already has `.pi/hud-footer.json`, they write to the project config; otherwise they write to the global config at `~/.pi/agent/hud-footer.json`.
 
 ## Token metric icons
 

@@ -75,6 +75,7 @@ pi install /path/to/pi-hud-footer
 | `/hud-footer-reload` | 重新读取配置并刷新 HUD footer。 |
 | `/hud-footer-theme` | 打开 TUI 选择器，切换并保存 HUD 样式。 |
 | `/hud-footer-language` | 打开 TUI 选择器，切换并保存界面语言。 |
+| `/hud-footer-currency` | 打开 TUI 选择器，切换并保存费用显示货币（汇率仍在配置文件中设置）。 |
 
 ## 配置
 
@@ -96,7 +97,7 @@ pi install /path/to/pi-hud-footer
 | `style` | HUD 样式：`classic` / `border`。 |
 | `display` | 控件显示规则，支持全局和按样式覆盖。 |
 | `cacheRateMode` | 缓存命中率：累计值 `total` / 最近一次请求 `latest`，默认 `total`。 |
-| `currency` | 费用显示货币：`USD` / `CNY`，默认 `USD`。 |
+| `currency` | 费用显示货币：`USD` / `CNY`，默认 `USD`；也可用 `/hud-footer-currency` 切换。 |
 | `exchangeRate` | 美元兑人民币汇率，默认 `6.8`（即 1 USD = 6.8 CNY）。 |
 | `barWidth` | 上下文进度条宽度。 |
 | `maxTools` | 工具统计最多显示数量。 |

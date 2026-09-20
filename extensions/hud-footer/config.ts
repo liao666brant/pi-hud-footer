@@ -4,6 +4,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { normalizeLanguageSetting } from "./i18n.ts";
 import {
+	HUD_CURRENCIES,
 	HUD_DISPLAY_KEYS,
 	HUD_DISPLAY_SCOPES,
 	type HudConfig,
@@ -28,7 +29,7 @@ const STYLE_ALIASES: Record<string, HudStyle> = {
 	current: "border",
 };
 
-const CURRENCIES = new Set<HudCurrency>(["USD", "CNY"]);
+const CURRENCIES = new Set<HudCurrency>(HUD_CURRENCIES);
 const CACHE_RATE_MODES = new Set<HudConfig["cacheRateMode"]>(["total", "latest"]);
 
 const LEGACY_DISPLAY_KEYS = {
@@ -68,7 +69,7 @@ function mergeLanguage(base: HudConfig, patch: Record<string, unknown>): HudConf
 	return normalizeLanguageSetting(patch.language) ?? "en";
 }
 
-function normalizeCurrency(value: unknown): HudCurrency | undefined {
+export function normalizeCurrency(value: unknown): HudCurrency | undefined {
 	if (typeof value !== "string") return undefined;
 	const currency = value.trim().toUpperCase() as HudCurrency;
 	return CURRENCIES.has(currency) ? currency : undefined;
@@ -173,7 +174,7 @@ function readJsonObject(path: string): Record<string, unknown> {
 	return isObject(config) ? config : {};
 }
 
-export function saveConfig(ctx: ExtensionContext, patch: Partial<Pick<HudConfig, "language" | "style">>): string {
+export function saveConfig(ctx: ExtensionContext, patch: Partial<Pick<HudConfig, "language" | "style" | "currency">>): string {
 	const path = writableConfigPath(ctx);
 	const nextConfig = { ...readJsonObject(path), ...patch };
 	mkdirSync(dirname(path), { recursive: true });

@@ -70,7 +70,7 @@
 | `style` | string | `"classic"` | HUD 样式。`"classic"`/`1` 为默认经典 footer 三行样式；`"border"`/`2` 为输入框边框样式。TUI 中也可用 `/hud-footer-theme` 打开选择器切换并保存。 |
 | `display` | object | `{}` | 控件显示规则。`all` 对所有样式生效，`classic` / `border` 会覆盖 `all`。 |
 | `cacheRateMode` | string | `"total"` | 缓存命中率模式。`"total"` 按 `usageScope` 范围内的累计用量计算，`"latest"` 取该范围内最后一条 assistant 请求；不区分大小写。 |
-| `currency` | string | `"USD"` | 费用显示货币。可选 `"USD"`、`"CNY"`，不区分大小写。 |
+| `currency` | string | `"USD"` | 费用显示货币。可选 `"USD"`、`"CNY"`，不区分大小写。也可用 `/hud-footer-currency` 打开 TUI 选择器。 |
 | `exchangeRate` | number | `6.8` | 美元兑人民币汇率，即 1 USD 可兑换多少 CNY。必须为大于 `0` 的有限数，仅在 `currency` 为 `"CNY"` 时用于换算。 |
 | `barWidth` | number | `18` | 上下文进度条宽度，会限制在 `6..40`。 |
 | `maxTools` | number | `7` | 工具统计最多显示多少个工具，会限制在 `1..20`。 |
@@ -105,6 +105,8 @@ pi 提供的费用统计以 USD 计价。费用的累计范围由 `usageScope` �
 }
 ```
 
+TUI 中可用 `/hud-footer-currency` 打开选择器切换并保存 `currency`；`exchangeRate` 只能写在配置文件里，选择器不会修改它。
+
 ## `display` 显示规则
 
 支持 `all`、`classic`、`border` 三个分组；优先级：`display.all` < `display.<当前样式>`。未配置的字段默认显示。
@@ -137,7 +139,7 @@ pi 提供的费用统计以 USD 计价。费用的累计范围由 `usageScope` �
 | `classic` / `1` | 默认主题。经典三行 footer 样式，适合保留旧版显示习惯。 |
 | `border` / `2` | 输入框边框样式。将稳定 HUD 信息嵌入输入框上下边框，工具统计保留在 footer 行，避免 footer 高度动态变化。 |
 
-`/hud-footer-theme` 会切换并保存样式：如果当前受信任项目已存在 `.pi/hud-footer.json`，则写入项目配置；否则写入全局配置 `~/.pi/agent/hud-footer.json`。
+`/hud-footer-theme`、`/hud-footer-language` 和 `/hud-footer-currency` 会切换并保存对应设置：如果当前受信任项目已存在 `.pi/hud-footer.json`，则写入项目配置；否则写入全局配置 `~/.pi/agent/hud-footer.json`。
 
 ## 词元指标图标
 

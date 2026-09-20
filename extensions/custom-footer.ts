@@ -1,10 +1,10 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { DEFAULT_CONFIG, isDisplayEnabled, loadConfig, normalizeStyle, saveConfig } from "./hud-footer/config.ts";
+import { DEFAULT_CONFIG, isDisplayEnabled, loadConfig, normalizeCurrency, normalizeStyle, saveConfig } from "./hud-footer/config.ts";
 import { createHudEditorFactory } from "./hud-footer/editor.ts";
 import { fmtTurnDuration } from "./hud-footer/format.ts";
 import { getI18n, normalizeLanguageSetting } from "./hud-footer/i18n.ts";
 import { createHudFooter, type HudEditorState } from "./hud-footer/render.ts";
-import type { HudConfig, HudLanguageSetting, HudStyle } from "./hud-footer/types.ts";
+import { HUD_CURRENCIES, type HudConfig, type HudCurrency, type HudLanguageSetting, type HudStyle } from "./hud-footer/types.ts";
 
 const ACTIVE_EXTENSION_KEY = Symbol.for("pi-hud-footer.active");
 const TOKEN_RATE_WINDOW_MS = 2000;
@@ -197,6 +197,10 @@ export default function (pi: ExtensionAPI) {
 		return LANGUAGE_SETTINGS.map((setting, index) => `${index + 1} - ${i18n.languageNames[setting]}`);
 	}
 
+	function currencyOptions(i18n = currentI18n()): string[] {
+		return HUD_CURRENCIES.map((currency, index) => `${index + 1} - ${i18n.currencyNames[currency]}`);
+	}
+
 	function parseStyleChoice(value: string | undefined): HudStyle | undefined {
 		if (!value) return undefined;
 		const trimmed = value.trim();
@@ -236,6 +240,27 @@ export default function (pi: ExtensionAPI) {
 		}
 		const index = LANGUAGE_SETTINGS.indexOf(config.language);
 		return LANGUAGE_SETTINGS[(index + 1) % LANGUAGE_SETTINGS.length];
+	}
+
+	function parseCurrencyChoice(value: string | undefined): HudCurrency | undefined {
+		if (!value) return undefined;
+		const trimmed = value.trim();
+		const rank = /^(\d+)(?: -.+)?$/.exec(trimmed);
+		if (rank) return HUD_CURRENCIES[Number(rank[1]) - 1];
+		return normalizeCurrency(trimmed);
+	}
+
+	async function chooseCurrency(args: string, ctx: ExtensionContext): Promise<HudCurrency | undefined> {
+		const trimmedArgs = args.trim();
+		const fromArgs = parseCurrencyChoice(trimmedArgs);
+		if (fromArgs) return fromArgs;
+		if (trimmedArgs) return undefined;
+		if (ctx.mode === "tui") {
+			const selected = await ctx.ui.select(currentI18n().currencySelectTitle, currencyOptions());
+			return parseCurrencyChoice(selected);
+		}
+		const index = HUD_CURRENCIES.indexOf(config.currency);
+		return HUD_CURRENCIES[(index + 1) % HUD_CURRENCIES.length];
 	}
 
 	pi.on("session_start", (_event, ctx) => {
@@ -361,5 +386,29 @@ export default function (pi: ExtensionAPI) {
 	pi.registerCommand("hud-footer-language", {
 		description: commandI18n.commands.languageDescription,
 		handler: handleLanguageCommand,
+	});
+
+	async function handleCurrencyCommand(args: string, ctx: ExtensionContext) {
+		const nextCurrency = await chooseCurrency(args, ctx);
+		if (!nextCurrency) {
+			ctx.ui.notify(currentI18n().commands.currencyDescription, "warning");
+			return;
+		}
+
+		try {
+			saveConfig(ctx, { currency: nextCurrency });
+		} catch (error) {
+			console.error("[pi-hud-footer] Failed to save currency:", error);
+			ctx.ui.notify(currentI18n().currencySaveFailed, "error");
+			return;
+		}
+
+		applyHud(ctx);
+		ctx.ui.notify(currentI18n().currencySaved(currentI18n().currencyNames[nextCurrency]), "info");
+	}
+
+	pi.registerCommand("hud-footer-currency", {
+		description: commandI18n.commands.currencyDescription,
+		handler: handleCurrencyCommand,
 	});
 }

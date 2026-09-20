@@ -1,4 +1,4 @@
-import type { HudLanguage, HudLanguageSetting, HudStyle } from "./types.ts";
+import type { HudCurrency, HudLanguage, HudLanguageSetting, HudStyle } from "./types.ts";
 
 type FooterLabels = {
 	ready: string;
@@ -29,11 +29,16 @@ type HudMessages = {
 	languageSelectTitle: string;
 	languageSaved(languageName: string): string;
 	languageSaveFailed: string;
+	currencyNames: Record<HudCurrency, string>;
+	currencySelectTitle: string;
+	currencySaved(currencyName: string): string;
+	currencySaveFailed: string;
 	commands: {
 		toggleDescription: string;
 		reloadDescription: string;
 		styleDescription: string;
 		languageDescription: string;
+		currencyDescription: string;
 	};
 };
 
@@ -76,11 +81,16 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 		languageSelectTitle: "Select HUD footer language",
 		languageSaved: (languageName) => `HUD footer language saved: ${languageName}`,
 		languageSaveFailed: "Failed to save HUD footer language.",
+		currencyNames: { USD: "US dollar (USD)", CNY: "Chinese yuan (CNY)" },
+		currencySelectTitle: "Select HUD footer currency",
+		currencySaved: (currencyName) => `HUD footer currency saved: ${currencyName}`,
+		currencySaveFailed: "Failed to save HUD footer currency.",
 		commands: {
 			toggleDescription: "Toggle Claude HUD style custom footer.",
 			reloadDescription: "Reload pi-hud-footer config.",
 			styleDescription: "Open the pi-hud-footer theme selector and save the style.",
 			languageDescription: "Open the pi-hud-footer language selector and save the language.",
+			currencyDescription: "Open the pi-hud-footer currency selector and save the currency.",
 		},
 	},
 	zh: {
@@ -115,11 +125,16 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 		languageSelectTitle: "选择 HUD footer 语言",
 		languageSaved: (languageName) => `HUD footer 语言已保存：${languageName}`,
 		languageSaveFailed: "保存 HUD footer 语言失败。",
+		currencyNames: { USD: "美元（USD）", CNY: "人民币（CNY）" },
+		currencySelectTitle: "选择 HUD footer 货币",
+		currencySaved: (currencyName) => `HUD footer 货币已保存：${currencyName}`,
+		currencySaveFailed: "保存 HUD footer 货币失败。",
 		commands: {
 			toggleDescription: "切换 Claude HUD 风格自定义 footer。",
 			reloadDescription: "重新加载 pi-hud-footer 配置。",
 			styleDescription: "打开 pi-hud-footer 主题选择界面并保存样式。",
 			languageDescription: "打开 pi-hud-footer 语言选择界面并保存语言。",
+			currencyDescription: "打开 pi-hud-footer 货币选择界面并保存货币。",
 		},
 	},
 };

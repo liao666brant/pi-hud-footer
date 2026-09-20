@@ -75,6 +75,7 @@ pi install /path/to/pi-hud-footer
 | `/hud-footer-reload` | Reload configuration and refresh the HUD footer. |
 | `/hud-footer-theme` | Open a TUI selector, switch the HUD style, and save it. |
 | `/hud-footer-language` | Open a TUI selector, switch the UI language, and save it. |
+| `/hud-footer-currency` | Open a TUI selector, switch the cost display currency, and save it. The exchange rate stays a config-file setting. |
 
 ## Configuration
 
@@ -96,7 +97,7 @@ Example configuration: [examples/hud-footer.json](examples/hud-footer.json) / an
 | `style` | HUD style: `classic` / `border`. |
 | `display` | Widget visibility rules, with global and per-style overrides. |
 | `cacheRateMode` | Cache hit rate: aggregate (`total`) or latest request (`latest`). Defaults to `total`. |
-| `currency` | Cost display currency: `USD` / `CNY`. Defaults to `USD`. |
+| `currency` | Cost display currency: `USD` / `CNY`. Defaults to `USD`; `/hud-footer-currency` switches it too. |
 | `exchangeRate` | USD-to-CNY exchange rate. Defaults to `6.8` (1 USD = 6.8 CNY). |
 | `barWidth` | Context progress bar width. |
 | `maxTools` | Maximum number of tools shown in the tool summary. |
