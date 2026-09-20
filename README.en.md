@@ -72,6 +72,7 @@ pi install /path/to/pi-hud-footer
 | `/hud-footer` | Toggle the HUD footer on or off for the current session. |
 | `/hud-footer-reload` | Reload configuration and refresh the HUD footer. |
 | `/hud-footer-theme` | Open a TUI selector, switch the HUD style, and save it. |
+| `/hud-footer-language` | Open a TUI selector, switch the UI language, and save it. |
 
 ## Configuration
 

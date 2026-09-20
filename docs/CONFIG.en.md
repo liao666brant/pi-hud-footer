@@ -62,7 +62,7 @@ For an annotated full example, see [examples/hud-footer.jsonc](../examples/hud-f
 | Option | Type | Default | Description |
 |---|---:|---:|---|
 | `enabled` | boolean | `true` | Enable the HUD footer when a session starts. |
-| `language` | string | `"auto"` | UI language. Supported values: `"auto"`, `"zh"`, `"en"`. `"auto"` selects Chinese or English from the system language and falls back to English for unsupported system languages or invalid configuration values. |
+| `language` | string | `"auto"` | UI language. Supported values: `"auto"`, `"zh"`, `"en"`. `"auto"` selects Chinese or English from the system language and falls back to English for unsupported system languages or invalid configuration values. You can also use `/hud-footer-language` to open the TUI selector. |
 | `style` | string | `"classic"` | HUD style. `"classic"`/`1` is the default classic three-line footer style; `"border"`/`2` is the editor-border style. You can also open a TUI selector to switch and save the style with `/hud-footer-theme`. |
 | `display` | object | `{}` | Widget visibility rules. `all` applies to every style, and `classic` / `border` override `all`. |
 | `barWidth` | number | `18` | Width of the context progress bar. Clamped to `6..40`. |

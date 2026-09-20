@@ -62,7 +62,7 @@
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---:|---:|---|
 | `enabled` | boolean | `true` | 是否在会话启动时启用 HUD footer。 |
-| `language` | string | `"auto"` | 界面语言。可选 `"auto"`、`"zh"`、`"en"`；`"auto"` 会根据系统语言选择中文或英文，其他系统语言或无效配置回退英文。 |
+| `language` | string | `"auto"` | 界面语言。可选 `"auto"`、`"zh"`、`"en"`；`"auto"` 会根据系统语言选择中文或英文，其他系统语言或无效配置回退英文。也可用 `/hud-footer-language` 打开 TUI 选择器。 |
 | `style` | string | `"classic"` | HUD 样式。`"classic"`/`1` 为默认经典 footer 三行样式；`"border"`/`2` 为输入框边框样式。TUI 中也可用 `/hud-footer-theme` 打开选择器切换并保存。 |
 | `display` | object | `{}` | 控件显示规则。`all` 对所有样式生效，`classic` / `border` 会覆盖 `all`。 |
 | `barWidth` | number | `18` | 上下文进度条宽度，会限制在 `6..40`。 |

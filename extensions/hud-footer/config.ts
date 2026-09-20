@@ -116,7 +116,7 @@ function projectConfigPath(ctx: ExtensionContext): string {
 	return join(ctx.cwd, CONFIG_DIR_NAME, CONFIG_FILE_NAME);
 }
 
-function styleConfigPath(ctx: ExtensionContext): string {
+function writableConfigPath(ctx: ExtensionContext): string {
 	const projectPath = projectConfigPath(ctx);
 	if (ctx.isProjectTrusted() && existsSync(projectPath)) return projectPath;
 	return globalConfigPath();
@@ -137,9 +137,9 @@ function readJsonObject(path: string): Record<string, unknown> {
 	return isObject(config) ? config : {};
 }
 
-export function saveConfigStyle(ctx: ExtensionContext, style: HudStyle): string {
-	const path = styleConfigPath(ctx);
-	const nextConfig = { ...readJsonObject(path), style };
+export function saveConfig(ctx: ExtensionContext, patch: Partial<Pick<HudConfig, "language" | "style">>): string {
+	const path = writableConfigPath(ctx);
+	const nextConfig = { ...readJsonObject(path), ...patch };
 	mkdirSync(dirname(path), { recursive: true });
 	writeFileSync(path, `${JSON.stringify(nextConfig, null, 2)}\n`, "utf8");
 	return path;

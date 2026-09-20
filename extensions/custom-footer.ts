@@ -1,10 +1,10 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { DEFAULT_CONFIG, isDisplayEnabled, loadConfig, normalizeStyle, saveConfigStyle } from "./hud-footer/config.ts";
+import { DEFAULT_CONFIG, isDisplayEnabled, loadConfig, normalizeStyle, saveConfig } from "./hud-footer/config.ts";
 import { createHudEditorFactory } from "./hud-footer/editor.ts";
 import { fmtTurnDuration } from "./hud-footer/format.ts";
-import { getI18n } from "./hud-footer/i18n.ts";
+import { getI18n, normalizeLanguageSetting } from "./hud-footer/i18n.ts";
 import { createHudFooter, type HudEditorState } from "./hud-footer/render.ts";
-import type { HudConfig, HudStyle } from "./hud-footer/types.ts";
+import type { HudConfig, HudLanguageSetting, HudStyle } from "./hud-footer/types.ts";
 
 const ACTIVE_EXTENSION_KEY = Symbol.for("pi-hud-footer.active");
 const TOKEN_RATE_WINDOW_MS = 2000;
@@ -14,6 +14,7 @@ const CHARS_PER_TOKEN = 4;
 type HudGlobal = typeof globalThis & { [ACTIVE_EXTENSION_KEY]?: boolean };
 type TokenRateSource = "usage" | "estimate";
 type TokenRateSample = { outputTokens: number; timestamp: number; source: TokenRateSource };
+const LANGUAGE_SETTINGS: HudLanguageSetting[] = ["auto", "zh", "en"];
 
 export default function (pi: ExtensionAPI) {
 	const hudGlobal = globalThis as HudGlobal;
@@ -192,6 +193,10 @@ export default function (pi: ExtensionAPI) {
 		return [`1 - ${i18n.styleNames.classic}`, `2 - ${i18n.styleNames.border}`];
 	}
 
+	function languageOptions(i18n = currentI18n()): string[] {
+		return LANGUAGE_SETTINGS.map((setting, index) => `${index + 1} - ${i18n.languageNames[setting]}`);
+	}
+
 	function parseStyleChoice(value: string | undefined): HudStyle | undefined {
 		if (!value) return undefined;
 		const trimmed = value.trim();
@@ -210,6 +215,27 @@ export default function (pi: ExtensionAPI) {
 			return parseStyleChoice(selected);
 		}
 		return config.style === "classic" ? "border" : "classic";
+	}
+
+	function parseLanguageChoice(value: string | undefined): HudLanguageSetting | undefined {
+		if (!value) return undefined;
+		const trimmed = value.trim();
+		const rank = /^(\d+)(?: -.+)?$/.exec(trimmed);
+		if (rank) return LANGUAGE_SETTINGS[Number(rank[1]) - 1];
+		return normalizeLanguageSetting(trimmed);
+	}
+
+	async function chooseLanguage(args: string, ctx: ExtensionContext): Promise<HudLanguageSetting | undefined> {
+		const trimmedArgs = args.trim();
+		const fromArgs = parseLanguageChoice(trimmedArgs);
+		if (fromArgs) return fromArgs;
+		if (trimmedArgs) return undefined;
+		if (ctx.mode === "tui") {
+			const selected = await ctx.ui.select(currentI18n().languageSelectTitle, languageOptions());
+			return parseLanguageChoice(selected);
+		}
+		const index = LANGUAGE_SETTINGS.indexOf(config.language);
+		return LANGUAGE_SETTINGS[(index + 1) % LANGUAGE_SETTINGS.length];
 	}
 
 	pi.on("session_start", (_event, ctx) => {
@@ -297,7 +323,7 @@ export default function (pi: ExtensionAPI) {
 		}
 
 		try {
-			saveConfigStyle(ctx, nextStyle);
+			saveConfig(ctx, { style: nextStyle });
 		} catch (error) {
 			console.error("[pi-hud-footer] Failed to save style:", error);
 			ctx.ui.notify(currentI18n().styleSaveFailed, "error");
@@ -308,8 +334,32 @@ export default function (pi: ExtensionAPI) {
 		ctx.ui.notify(currentI18n().styleSaved(currentI18n().styleNames[nextStyle]), "info");
 	}
 
+	async function handleLanguageCommand(args: string, ctx: ExtensionContext) {
+		const nextLanguage = await chooseLanguage(args, ctx);
+		if (!nextLanguage) {
+			ctx.ui.notify(currentI18n().commands.languageDescription, "warning");
+			return;
+		}
+
+		try {
+			saveConfig(ctx, { language: nextLanguage });
+		} catch (error) {
+			console.error("[pi-hud-footer] Failed to save language:", error);
+			ctx.ui.notify(currentI18n().languageSaveFailed, "error");
+			return;
+		}
+
+		applyHud(ctx);
+		ctx.ui.notify(currentI18n().languageSaved(currentI18n().languageNames[nextLanguage]), "info");
+	}
+
 	pi.registerCommand("hud-footer-theme", {
 		description: commandI18n.commands.styleDescription,
 		handler: handleThemeCommand,
+	});
+
+	pi.registerCommand("hud-footer-language", {
+		description: commandI18n.commands.languageDescription,
+		handler: handleLanguageCommand,
 	});
 }

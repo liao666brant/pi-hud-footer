@@ -72,6 +72,7 @@ pi install /path/to/pi-hud-footer
 | `/hud-footer` | 切换当前会话的 HUD footer 开/关。 |
 | `/hud-footer-reload` | 重新读取配置并刷新 HUD footer。 |
 | `/hud-footer-theme` | 打开 TUI 选择器，切换并保存 HUD 样式。 |
+| `/hud-footer-language` | 打开 TUI 选择器，切换并保存界面语言。 |
 
 ## 配置
 

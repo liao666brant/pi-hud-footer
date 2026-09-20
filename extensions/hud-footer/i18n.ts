@@ -25,10 +25,15 @@ type HudMessages = {
 	styleSelectTitle: string;
 	styleSaved(styleName: string): string;
 	styleSaveFailed: string;
+	languageNames: Record<HudLanguageSetting, string>;
+	languageSelectTitle: string;
+	languageSaved(languageName: string): string;
+	languageSaveFailed: string;
 	commands: {
 		toggleDescription: string;
 		reloadDescription: string;
 		styleDescription: string;
+		languageDescription: string;
 	};
 };
 
@@ -67,10 +72,15 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 		styleSelectTitle: "Select HUD footer style",
 		styleSaved: (styleName) => `HUD footer style saved: ${styleName}`,
 		styleSaveFailed: "Failed to save HUD footer style.",
+		languageNames: { auto: "System language", zh: "Chinese", en: "English" },
+		languageSelectTitle: "Select HUD footer language",
+		languageSaved: (languageName) => `HUD footer language saved: ${languageName}`,
+		languageSaveFailed: "Failed to save HUD footer language.",
 		commands: {
 			toggleDescription: "Toggle Claude HUD style custom footer.",
 			reloadDescription: "Reload pi-hud-footer config.",
 			styleDescription: "Open the pi-hud-footer theme selector and save the style.",
+			languageDescription: "Open the pi-hud-footer language selector and save the language.",
 		},
 	},
 	zh: {
@@ -101,10 +111,15 @@ const TRANSLATIONS: Record<HudLanguage, Omit<HudMessages, "language">> = {
 		styleSelectTitle: "选择 HUD footer 样式",
 		styleSaved: (styleName) => `HUD footer 样式已保存：${styleName}`,
 		styleSaveFailed: "保存 HUD footer 样式失败。",
+		languageNames: { auto: "跟随系统", zh: "中文", en: "英文" },
+		languageSelectTitle: "选择 HUD footer 语言",
+		languageSaved: (languageName) => `HUD footer 语言已保存：${languageName}`,
+		languageSaveFailed: "保存 HUD footer 语言失败。",
 		commands: {
 			toggleDescription: "切换 Claude HUD 风格自定义 footer。",
 			reloadDescription: "重新加载 pi-hud-footer 配置。",
 			styleDescription: "打开 pi-hud-footer 主题选择界面并保存样式。",
+			languageDescription: "打开 pi-hud-footer 语言选择界面并保存语言。",
 		},
 	},
 };
