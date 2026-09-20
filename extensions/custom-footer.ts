@@ -22,6 +22,7 @@ export default function (pi: ExtensionAPI) {
 
 	let runtimeEnabled: boolean | undefined;
 	let running = false;
+	let uiPromptActive = false;
 	let agentStartedAt: number | undefined;
 	let tokenRateSample: TokenRateSample | undefined;
 	let estimatedOutputTokens = 0;
@@ -43,7 +44,7 @@ export default function (pi: ExtensionAPI) {
 	}
 
 	function isRunning(): boolean {
-		return running;
+		return running && !uiPromptActive;
 	}
 
 	function getLastTurnDuration(): number | undefined {
@@ -102,7 +103,7 @@ export default function (pi: ExtensionAPI) {
 	}
 
 	function updateRunningMessage(ctx: ExtensionContext) {
-		if (agentStartedAt === undefined) return;
+		if (agentStartedAt === undefined || uiPromptActive) return;
 		const i18n = currentI18n();
 		const elapsed = fmtTurnDuration(Date.now() - agentStartedAt, i18n.language);
 		ctx.ui.setWorkingMessage(i18n.workingMessage(elapsed));
@@ -114,6 +115,18 @@ export default function (pi: ExtensionAPI) {
 			runningTimer = undefined;
 		}
 		ctx?.ui.setWorkingMessage();
+	}
+
+	function pauseForUiPrompt(ctx: ExtensionContext) {
+		uiPromptActive = true;
+		if (ctx.mode === "tui") ctx.ui.setWorkingMessage();
+	}
+
+	function resumeAfterUiPrompt(ctx: ExtensionContext) {
+		uiPromptActive = false;
+		if (running && ctx.mode === "tui" && isDisplayEnabled(config, "turnDuration")) {
+			updateRunningMessage(ctx);
+		}
 	}
 
 	function startRunningTimer(ctx: ExtensionContext) {
@@ -206,8 +219,17 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("agent_start", (_event, ctx) => {
 		running = true;
+		uiPromptActive = false;
 		agentStartedAt = Date.now();
 		startRunningTimer(ctx);
+	});
+
+	pi.on("ui_prompt_start", (_event, ctx) => {
+		pauseForUiPrompt(ctx);
+	});
+
+	pi.on("ui_prompt_end", (_event, ctx) => {
+		resumeAfterUiPrompt(ctx);
 	});
 
 	pi.on("turn_start", () => {
@@ -226,6 +248,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("agent_end", (_event, ctx) => {
 		running = false;
+		uiPromptActive = false;
 		const elapsed = agentStartedAt === undefined ? undefined : Date.now() - agentStartedAt;
 		if (elapsed !== undefined) lastTurnDuration = elapsed;
 		agentStartedAt = undefined;

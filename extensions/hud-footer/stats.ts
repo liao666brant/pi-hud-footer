@@ -34,9 +34,10 @@ export function collectStats(ctx: ExtensionContext): HudStats {
 		if (entry.type !== "message") continue;
 		const message = entry.message;
 		if (!isRecord(message)) continue;
+		const role = (message as { role?: unknown }).role;
 
-		if (message.role === "assistant") {
-			const usage = (message as AssistantMessage).usage;
+		if (role === "assistant") {
+			const usage = (message as unknown as AssistantMessage).usage;
 			if (!usage) continue;
 			stats.input += usage.input || 0;
 			stats.output += usage.output || 0;
@@ -46,7 +47,7 @@ export function collectStats(ctx: ExtensionContext): HudStats {
 			continue;
 		}
 
-		if (message.role === "toolResult" && typeof message.toolName === "string") {
+		if (role === "toolResult" && typeof message.toolName === "string") {
 			const current = stats.tools.get(message.toolName) ?? { ok: 0, error: 0 };
 			if (message.isError) current.error++;
 			else current.ok++;
