@@ -127,8 +127,11 @@ Supports the `all`, `classic`, and `border` groups. Precedence: `display.all` < 
 | `cost` | Estimated cost |
 | `state` | running / ready state |
 | `turnDuration` | Per-turn duration notification, disabled by default to avoid conflicts with other extensions |
+| `extensionStatus` | Status line set by other extensions (`ctx.ui.setStatus`) |
 
 `turnDuration` is disabled by default. Set it to `true` under `display.all` or the relevant style to enable per-turn duration notifications.
+
+`extensionStatus` joins the status texts other extensions set with `ctx.ui.setStatus`, sorted by key, into one line appended after the footer; the line is omitted when no extension sets a status. Text is stripped of newlines and tabs and consecutive spaces are collapsed, while the extension's own colors are preserved, matching pi's built-in footer.
 
 Right after a compaction and before the next response arrives, context usage is unknown. As in pi's built-in footer, the HUD then shows `?/<context window>` and hides the progress bar.
 

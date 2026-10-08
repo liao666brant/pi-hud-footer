@@ -35,7 +35,8 @@
       "elapsed": true,        // 会话耗时
       "cost": true,           // 费用估算
       "state": true,          // running / ready 状态
-      "turnDuration": false   // 每轮对话用时通知，默认关闭以避免与其他插件重复
+      "turnDuration": false,  // 每轮对话用时通知，默认关闭以避免与其他插件重复
+      "extensionStatus": true // 其他扩展通过 ctx.ui.setStatus 设置的状态行
     },
 
     // classic 样式专用覆盖；这里只写需要覆盖 all 的字段。

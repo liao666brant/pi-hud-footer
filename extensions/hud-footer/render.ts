@@ -9,6 +9,7 @@ import type { ColorName, HudConfig, HudLanguage, HudStats } from "./types.ts";
 
 type Theme = ExtensionContext["ui"]["theme"];
 type FooterFactory = NonNullable<Parameters<ExtensionContext["ui"]["setFooter"]>[0]>;
+type FooterData = Parameters<FooterFactory>[2];
 
 export interface HudEditorState {
 	getGitBranch?: () => string | null | undefined;
@@ -255,6 +256,28 @@ export function renderHudBottomBorderSegments(
 	};
 }
 
+// Mirrors pi's own footer, which renders other extensions' ctx.ui.setStatus() texts verbatim so their colors survive.
+function sanitizeStatusText(text: string): string {
+	return text.replace(/[\r\n\t]/g, " ").replace(/ +/g, " ").trim();
+}
+
+function extensionStatusLine(
+	footerData: FooterData,
+	config: HudConfig,
+	theme: Theme,
+	width: number,
+): string | undefined {
+	if (!isDisplayEnabled(config, "extensionStatus")) return undefined;
+
+	const statuses = Array.from(footerData.getExtensionStatuses().entries())
+		.sort(([a], [b]) => a.localeCompare(b))
+		.map(([, text]) => sanitizeStatusText(text))
+		.filter((text) => text.length > 0);
+	if (statuses.length === 0) return undefined;
+
+	return truncateToWidth(statuses.join(" "), width, theme.fg("dim", "..."));
+}
+
 function renderBorderFooterLines(ctx: ExtensionContext, config: HudConfig, theme: Theme, width: number): string[] {
 	const i18n = getI18n(config.language);
 	const stats = collectStats(ctx, config.usageScope);
@@ -359,6 +382,9 @@ export function createHudFooter(
 						() => footerData.getGitBranch(),
 					)
 					: renderBorderFooterLines(ctx, config, theme, width);
+
+				const statusLine = extensionStatusLine(footerData, config, theme, width);
+				if (statusLine) lines.push(statusLine);
 
 				return lines.map((line) => {
 					if (visibleWidth(line) <= width) return line;

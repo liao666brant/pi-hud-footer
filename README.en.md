@@ -14,6 +14,7 @@ It keeps model, context, token, cache, cost, tool-call, and running-state inform
 - Shows running / ready state, session elapsed time, and estimated cost; turn duration notifications are opt-in
 - Displays costs in USD or CNY, with a customizable USD-to-CNY rate that defaults to `6.8`
 - Shows tool-call statistics while keeping footer height stable
+- Shows the status texts other extensions set with `ctx.ui.setStatus`
 - Supports two HUD styles: `classic` footer style and `border` editor-border style
 - Supports Chinese and English UI text, selected automatically from the system language by default
 - Supports global and project-level JSON configuration

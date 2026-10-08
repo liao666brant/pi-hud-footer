@@ -25,6 +25,7 @@ export const HUD_DISPLAY_KEYS = [
 	"cost",
 	"state",
 	"turnDuration",
+	"extensionStatus",
 ] as const;
 export type HudDisplayKey = (typeof HUD_DISPLAY_KEYS)[number];
 export type HudDisplayScope = (typeof HUD_DISPLAY_SCOPES)[number];

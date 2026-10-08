@@ -127,8 +127,11 @@ TUI 中可用 `/hud-footer-currency` 打开选择器切换并保存 `currency`�
 | `cost` | 费用估算 |
 | `state` | running / ready 状态 |
 | `turnDuration` | 每轮对话用时通知，默认关闭以避免与其他插件重复 |
+| `extensionStatus` | 其他扩展设置的状态行（`ctx.ui.setStatus`） |
 
 `turnDuration` 默认关闭。如需启用每轮用时通知，请在 `display.all` 或对应样式中设置为 `true`。
+
+`extensionStatus` 会把其他扩展通过 `ctx.ui.setStatus` 设置的状态文本按 key 排序拼成一行，追加在 footer 末尾；没有扩展设置状态时不会占用行。文本会去掉换行和制表符并压缩连续空格，扩展自带的颜色保留，处理方式与 pi 官方 footer 一致。
 
 上下文进度在压缩刚结束、下一次响应到达之前无法确定，此时按 pi 官方 footer 的做法显示 `?/<上下文窗口>`，并隐藏进度条。
 
