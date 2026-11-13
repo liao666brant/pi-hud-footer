@@ -4,16 +4,11 @@ import { createHudEditorFactory } from "./hud-footer/editor.ts";
 import { fmtTurnDuration } from "./hud-footer/format.ts";
 import { getI18n, normalizeLanguageSetting } from "./hud-footer/i18n.ts";
 import { createHudFooter, type HudEditorState } from "./hud-footer/render.ts";
+import { createTokenRateTracker } from "./hud-footer/token-rate.ts";
 import { HUD_CURRENCIES, type HudConfig, type HudCurrency, type HudLanguageSetting, type HudStyle } from "./hud-footer/types.ts";
 
 const ACTIVE_EXTENSION_KEY = Symbol.for("pi-hud-footer.active");
-const TOKEN_RATE_WINDOW_MS = 2000;
-const MIN_TOKEN_RATE_MS = 500;
-// ponytail: estimate streaming tokens from text deltas until providers expose live usage.
-const CHARS_PER_TOKEN = 4;
 type HudGlobal = typeof globalThis & { [ACTIVE_EXTENSION_KEY]?: boolean };
-type TokenRateSource = "usage" | "estimate";
-type TokenRateSample = { outputTokens: number; timestamp: number; source: TokenRateSource };
 const LANGUAGE_SETTINGS: HudLanguageSetting[] = ["auto", "zh", "en"];
 
 export default function (pi: ExtensionAPI) {
@@ -25,10 +20,8 @@ export default function (pi: ExtensionAPI) {
 	let running = false;
 	let uiPromptActive = false;
 	let agentStartedAt: number | undefined;
-	let tokenRateSample: TokenRateSample | undefined;
-	let estimatedOutputTokens = 0;
+	const tokenRateTracker = createTokenRateTracker();
 	let lastTurnDuration: number | undefined;
-	let lastTokenRate: number | undefined;
 	let runningTimer: ReturnType<typeof setInterval> | undefined;
 	let config: HudConfig = { ...DEFAULT_CONFIG };
 	let editorInstalled = false;
@@ -53,54 +46,17 @@ export default function (pi: ExtensionAPI) {
 	}
 
 	function getLastTokenRate(): number | undefined {
-		return lastTokenRate;
-	}
-
-	function setTokenRateSample(outputTokens: number, source: TokenRateSource, timestamp = Date.now()) {
-		tokenRateSample = { outputTokens, timestamp, source };
+		return tokenRateTracker.rate;
 	}
 
 	function resetTokenRate() {
-		estimatedOutputTokens = 0;
-		setTokenRateSample(0, "usage");
-		lastTokenRate = undefined;
+		tokenRateTracker.reset();
 	}
 
-	function deltaTokensFromUpdate(update: unknown): number {
-		if (typeof update !== "object" || update === null || !("delta" in update)) return 0;
+	function deltaText(update: unknown): string | undefined {
+		if (typeof update !== "object" || update === null || !("delta" in update)) return undefined;
 		const delta = (update as { delta?: unknown }).delta;
-		if (typeof delta !== "string") return 0;
-		return delta.length / CHARS_PER_TOKEN;
-	}
-
-	function updateMessageTokenRate(message: { usage: { output: number } }, deltaTokens = 0) {
-		if (message.usage.output > 0) {
-			updateTokenRate(message.usage.output, "usage");
-			return;
-		}
-
-		estimatedOutputTokens += deltaTokens;
-		updateTokenRate(estimatedOutputTokens, "estimate");
-	}
-
-	function updateTokenRate(outputTokens: number, source: TokenRateSource) {
-		const now = Date.now();
-		if (!Number.isFinite(outputTokens)) return;
-		if (!tokenRateSample || source !== tokenRateSample.source || outputTokens < tokenRateSample.outputTokens) {
-			setTokenRateSample(outputTokens, source, now);
-			return;
-		}
-
-		const deltaTokens = outputTokens - tokenRateSample.outputTokens;
-		const deltaMs = now - tokenRateSample.timestamp;
-		if (deltaMs > TOKEN_RATE_WINDOW_MS) {
-			setTokenRateSample(outputTokens, source, now);
-			return;
-		}
-		if (deltaTokens <= 0 || deltaMs < MIN_TOKEN_RATE_MS) return;
-
-		lastTokenRate = deltaTokens / (deltaMs / 1000);
-		tokenRateSample = { outputTokens, timestamp: now, source };
+		return typeof delta === "string" ? delta : undefined;
 	}
 
 	function updateRunningMessage(ctx: ExtensionContext) {
@@ -287,14 +243,21 @@ export default function (pi: ExtensionAPI) {
 		resetTokenRate();
 	});
 
+	pi.on("message_start", (event) => {
+		if (event.message.role !== "assistant") return;
+		tokenRateTracker.beginMessage();
+	});
+
 	pi.on("message_update", (event) => {
 		if (event.message.role !== "assistant") return;
-		updateMessageTokenRate(event.message, deltaTokensFromUpdate(event.assistantMessageEvent));
+		const delta = deltaText(event.assistantMessageEvent);
+		if (delta === undefined) return;
+		tokenRateTracker.addDelta(delta);
 	});
 
 	pi.on("message_end", (event) => {
 		if (event.message.role !== "assistant") return;
-		updateMessageTokenRate(event.message);
+		tokenRateTracker.finish(event.message);
 	});
 
 	pi.on("agent_end", (_event, ctx) => {

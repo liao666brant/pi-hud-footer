@@ -38,7 +38,8 @@
     "@earendil-works/pi-tui": "*"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test test/token-rate.test.ts"
   },
   "devDependencies": {
     "@earendil-works/pi-ai": "1.1.0",

@@ -156,7 +156,7 @@ Right after a compaction and before the next response arrives, context usage is 
 
 `R` / `W` are hidden independently when their value is `0`.
 
-`tokenRate` shows the main agent's current streaming output rate, computed from output-token deltas over the last 0.5-2 seconds.
+`tokenRate` shows the streaming output rate for the main agent's current assistant message. While streaming, tokens are estimated from text deltas: about one token per CJK character, and about one token per four other characters. The displayed value is a smoothed average of the last 2 seconds, and it keeps the previous value until that span reaches 0.6 seconds. When the response ends with `usage.output` greater than 0, the value becomes that message's output tokens divided by its generation time after time to first token.
 
 ## Cache hit rate formula
 
